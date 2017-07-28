@@ -1,3 +1,0 @@
-# ORDaR OAI-PMH
-
-
