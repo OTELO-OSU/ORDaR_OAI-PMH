@@ -11,7 +11,8 @@ function identify(){
      $sxe->addAttribute('xmlns:xmlns:mml', 'http://www.w3.org/1998/Math/MathML');
      $sxe->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
      $sxe->addChild('responseDate', date("Y-m-d\TH:i:s\Z"));
-     $request = $sxe->addChild('request', 'DOI');
+     $uri=explode('?', $_SERVER['REQUEST_URI'], 2);
+     $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
      $request->addAttribute('verb','Identify');
      $identify=$sxe->addChild('Identify');
      $identify->addChild('repositoryName', $config['REPOSITORY_NAME']);
@@ -26,6 +27,28 @@ function identify(){
 
 }
 
+function ListMetadataFormats(){
+      $config=self::ConfigFile();
+      $sxe = new \SimpleXMLElement("<OAI-PMH/>");
+     $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+     $sxe->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+     $sxe->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+     $sxe->addChild('responseDate', date("Y-m-d\TH:i:s\Z"));
+     $uri=explode('?', $_SERVER['REQUEST_URI'], 2);
+     $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
+     $request->addAttribute('verb','ListMetadataFormats');
+     $ListMetadataFormat1=$sxe->addChild('ListMetadataFormats');
+     $ListMetadataFormat1->addChild('metadataPrefix', "Dublin_core");
+     $ListMetadataFormat1->addChild('schema', "http://catalogue.bnf.fr/schemas/TELAP.xsd");
+     $ListMetadataFormat1->addChild('metadataNamespace', "http://catalogue.bnf.fr/namespaces/TEL_ApplicationProfile
+");
+
+
+     $xml = $sxe->asXML();
+     return $xml;
+
+}
+
 
 function badArgument(){
 	 $config=self::ConfigFile();
@@ -34,7 +57,8 @@ function badArgument(){
      $sxe->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
      $sxe->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
      $sxe->addChild('responseDate', date("Y-m-d\TH:i:s\Z"));
-     $request = $sxe->addChild('request', $config['BaseUrl']);
+     $uri=explode('?', $_SERVER['REQUEST_URI'], 2);
+     $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
      $request->addAttribute('verb','Identify');
      $identify=$sxe->addChild('error','The request includes illegal arguments, is missing required arguments, includes a repeated argument, or values for arguments have an illegal syntax.');
      $identify->addAttribute('code', 'badArgument');

@@ -22,8 +22,13 @@ $app->get('/oai', function ($request, $response,$args) {
 			}
 
 		}
-	    if ($allGetVars['verb']=='identify') {
+	    if ($allGetVars['verb']=='Identify') {
 	    	$xml= $request->identify();
+	    	print $xml;
+	    	return $response->WithHeader("Content-type:","text/xml");
+	    }
+	    elseif ($allGetVars['verb']=='ListMetadataFormats') {
+	    	$xml= $request->ListMetadataFormats();
 	    	print $xml;
 	    	return $response->WithHeader("Content-type:","text/xml");
 	    }
