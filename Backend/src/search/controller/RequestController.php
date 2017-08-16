@@ -111,17 +111,6 @@ function GetRecord($identifier,$metadataPrefix){
           //$dc_license=$oai_dc->addChild('dc:dc:dc_license',$value['INTRO']['LICENSE']);
           $dc_accessright=$oai_dc->addChild('dc:dc:dc_rights',$value['INTRO']['ACCESS_RIGHT']);
 
-
-
-
-
-
-
-
-
-
-
-
      }
    
      }
@@ -172,6 +161,73 @@ function ListIdentifiers($metadataPrefix){
           $identifier=$header->addChild('identifier',$value['_id']);
           $datestamp=$header->addChild('datestamp',$value['INTRO']['CREATION_DATE']);
           $Setspec=$header->addChild('setSpec',"??");
+         
+     }
+
+     $xml = $sxe->asXML();
+    return $xml;
+
+}
+
+
+function ListRecords($metadataPrefix){
+      $config=self::ConfigFile();
+      $sxe = new \SimpleXMLElement("<OAI-PMH/>");
+     $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+     $sxe->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+     $sxe->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+     $sxe->addChild('responseDate', date("Y-m-d\TH:i:s\Z"));
+     $uri=explode('?', $_SERVER['REQUEST_URI'], 2);
+     $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
+     $request->addAttribute('verb','ListRecords');
+     $request->addAttribute('metadataPrefix',$metadataPrefix);
+      $dbdoi      = new \MongoClient("mongodb://" . $config['host'] . ':' . $config['port'], array(
+            'authSource' => $config['authSource'],
+            'username' => $config['username'],
+            'password' => $config['password']
+        ));
+     $array=array();
+     $db     = $dbdoi->selectDB($config['authSource']);
+     $collections = $db->getCollectionNames();
+     foreach ($collections as $collection) {
+         $collection = $db->selectCollection($collection);
+         
+     $cursor = $collection->find();
+     $cursor->sort(array('INTRO.CREATION_DATE' => -1));
+     foreach ($cursor as $key => $value) {
+          $array[]=$value;
+     }
+     }
+     $getrecord=$sxe->addChild('ListRecords');
+     foreach ($array as $key => $value) {
+        $record=$getrecord->addChild('record');
+          $header=$record->addChild('header');
+          $identifier=$header->addChild('identifier',$value['_id']);
+          $datestamp=$header->addChild('datestamp',$value['INTRO']['CREATION_DATE']);
+          $Setspec=$header->addChild('setSpec',"??");
+          $metadata=$record->addChild('metadata');
+          $oai_dc=$metadata->addChild('oai_dc:oai_dc:dc');
+          $oai_dc->addAttribute('xmlns:xmlns:dc', 'http://purl.org/dc/elements/1.1/');
+          $oai_dc->addAttribute('xmlns:xmlns:oai_dc', 'http://www.openarchives.org/OAI/2.0/oai_dc/');
+          $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+          $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd');
+          $dc_identifier=$oai_dc->addChild('dc:dc:identifier',$identifier);
+          $dc_title=$oai_dc->addChild('dc:dc:title',$value['INTRO']['TITLE']);
+          foreach ($value['INTRO']['FILE_CREATOR'] as $key => $author) {
+                $oai_dc->addChild('dc:dc:creator', $author['DISPLAY_NAME']);
+            }
+          $dc_date=$oai_dc->addChild('dc:dc:date',$value['INTRO']['CREATION_DATE']);
+          $dc_description=$oai_dc->addChild('dc:dc:description',$value['INTRO']['DATA_DESCRIPTION']);
+          $dc_language=$oai_dc->addChild('dc:dc:language',$value['INTRO']['LANGUAGE']);
+          $dc_publisher=$oai_dc->addChild('dc:dc:dc_publisher',$value['INTRO']['PUBLISHER']);
+          foreach ($value['INTRO']['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
+                $oai_dc->addChild('dc:dc:subject', $SCIENTIFIC_FIELD['NAME']);
+            }
+            /* foreach ($value['INTRO']['INSTITUTION'] as $key => $INSTITUTIONS) {
+                $oai_dc->addChild('dc:dc:institution', $INSTITUTIONS['NAME']);
+            }*/
+          //$dc_license=$oai_dc->addChild('dc:dc:dc_license',$value['INTRO']['LICENSE']);
+          $dc_accessright=$oai_dc->addChild('dc:dc:dc_rights',$value['INTRO']['ACCESS_RIGHT']);
          
      }
 
