@@ -1,5 +1,7 @@
 <?php
 namespace search\controller;
+ini_set('memory_limit', '-1');
+
 
 class RequestController
 {
@@ -133,6 +135,48 @@ function GetRecord($identifier,$metadataPrefix){
 
      $xml = $sxe->asXML();
      return $xml;
+
+}
+
+function ListIdentifiers($metadataPrefix){
+      $config=self::ConfigFile();
+      $sxe = new \SimpleXMLElement("<OAI-PMH/>");
+     $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+     $sxe->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+     $sxe->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+     $sxe->addChild('responseDate', date("Y-m-d\TH:i:s\Z"));
+     $uri=explode('?', $_SERVER['REQUEST_URI'], 2);
+     $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
+     $request->addAttribute('verb','ListIdentifiers');
+     $request->addAttribute('metadataPrefix',$metadataPrefix);
+      $dbdoi      = new \MongoClient("mongodb://" . $config['host'] . ':' . $config['port'], array(
+            'authSource' => $config['authSource'],
+            'username' => $config['username'],
+            'password' => $config['password']
+        ));
+     $array=array();
+     $db     = $dbdoi->selectDB($config['authSource']);
+     $collections = $db->getCollectionNames();
+     foreach ($collections as $collection) {
+         $collection = $db->selectCollection($collection);
+         
+     $cursor = $collection->find();
+     $cursor->sort(array('INTRO.CREATION_DATE' => -1));
+     foreach ($cursor as $key => $value) {
+          $array[]=$value;
+     }
+     }
+        $getrecord=$sxe->addChild('ListIdentifiers');
+     foreach ($array as $key => $value) {
+          $header=$getrecord->addChild('header');
+          $identifier=$header->addChild('identifier',$value['_id']);
+          $datestamp=$header->addChild('datestamp',$value['INTRO']['CREATION_DATE']);
+          $Setspec=$header->addChild('setSpec',"??");
+         
+     }
+
+     $xml = $sxe->asXML();
+    return $xml;
 
 }
 

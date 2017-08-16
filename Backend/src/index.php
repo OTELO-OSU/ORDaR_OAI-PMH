@@ -33,7 +33,7 @@ $app->get('/oai', function ($request, $response,$args) {
 	    		$xml= $request->BadArgument();
 	    	}
 	    	else{
-	    		$xml= $request->ListIdentifiers();
+	    		$xml= $request->ListIdentifiers($allGetVars['metadataPrefix']);
 	    	}
 	    }
 	    elseif ($allGetVars['verb']=='ListRecords') {
