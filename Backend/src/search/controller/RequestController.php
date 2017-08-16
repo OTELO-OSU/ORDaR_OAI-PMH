@@ -103,11 +103,11 @@ function GetRecord($identifier,$metadataPrefix){
           foreach ($value['INTRO']['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                 $oai_dc->addChild('dc:dc:subject', $SCIENTIFIC_FIELD['NAME']);
             }
-             foreach ($value['INTRO']['INSTITUTION'] as $key => $INSTITUTIONS) {
+            /* foreach ($value['INTRO']['INSTITUTION'] as $key => $INSTITUTIONS) {
                 $oai_dc->addChild('dc:dc:institution', $INSTITUTIONS['NAME']);
-            }
-          $dc_license=$oai_dc->addChild('dc:dc:dc_license',$value['INTRO']['LICENSE']);
-          $dc_accessright=$oai_dc->addChild('dc:dc:dc_data_accessright',$value['INTRO']['ACCESS_RIGHT']);
+            }*/
+          //$dc_license=$oai_dc->addChild('dc:dc:dc_license',$value['INTRO']['LICENSE']);
+          $dc_accessright=$oai_dc->addChild('dc:dc:dc_rights',$value['INTRO']['ACCESS_RIGHT']);
 
 
 
