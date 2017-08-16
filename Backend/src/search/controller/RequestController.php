@@ -27,7 +27,7 @@ function identify(){
 }
 
 
-function Fail(){
+function badArgument(){
 	 $config=self::ConfigFile();
 	 $sxe = new \SimpleXMLElement("<OAI-PMH/>");
      $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
@@ -38,6 +38,21 @@ function Fail(){
      $request->addAttribute('verb','Identify');
      $identify=$sxe->addChild('error','The request includes illegal arguments, is missing required arguments, includes a repeated argument, or values for arguments have an illegal syntax.');
      $identify->addAttribute('code', 'badArgument');
+     $xml = $sxe->asXML();
+     return $xml;
+}
+
+function IllegalVerb(){
+      $config=self::ConfigFile();
+      $sxe = new \SimpleXMLElement("<OAI-PMH/>");
+     $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+     $sxe->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+     $sxe->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+     $sxe->addChild('responseDate', date("Y-m-d\TH:i:s\Z"));
+     $uri=explode('?', $_SERVER['REQUEST_URI'], 2);
+     $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
+     $identify=$sxe->addChild('error','Illegal verb');
+     $identify->addAttribute('code', 'badVerb');
      $xml = $sxe->asXML();
      return $xml;
 }

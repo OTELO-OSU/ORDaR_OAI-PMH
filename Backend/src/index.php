@@ -16,7 +16,7 @@ $app->get('/oai', function ($request, $response,$args) {
 		foreach($allGetVars as $key => $param){
 			foreach ($legitarg as  $value) {
 				if ($key!=$value) {
-	    	$xml= $request->Fail();
+	    	$xml= $request->BadArgument();
 	    	print $xml;
 	    	return $response->WithHeader("Content-type:","text/xml");				}
 			}
@@ -24,6 +24,11 @@ $app->get('/oai', function ($request, $response,$args) {
 		}
 	    if ($allGetVars['verb']=='identify') {
 	    	$xml= $request->identify();
+	    	print $xml;
+	    	return $response->WithHeader("Content-type:","text/xml");
+	    }
+	    else{
+			$xml= $request->IllegalVerb();
 	    	print $xml;
 	    	return $response->WithHeader("Content-type:","text/xml");
 	    }
