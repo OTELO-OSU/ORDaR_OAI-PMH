@@ -130,6 +130,53 @@ function GetRecord($identifier,$metadataPrefix){
      return $xml;
 
 }
+   private function Curlrequest($url, $curlopt)
+    {
+        $ch      = curl_init();
+        $curlopt = array(
+            CURLOPT_URL => $url
+        ) + $curlopt;
+        curl_setopt_array($ch, $curlopt);
+        $rawData = curl_exec($ch);
+        curl_close($ch);
+        return $rawData;
+    }
+
+ function requestToAPI($page,$from,$until)
+    {
+        $config=self::ConfigFile();
+        $bdd                        = strtolower($config['authSource']);
+        $postcontent = '{  
+            "sort": { "INTRO.CREATION_DATE": { "order": "desc" }} 
+            }
+
+       ';
+        $url                        = 'http://localhost/' . $bdd . '/_search?q=*AND%20INTRO.CREATION_DATE:['.$from.'%20TO%20'.$until.']%20AND%20NOT%20INTRO.ACCESS_RIGHT:Unpublished%20AND%20NOT%20INTRO.ACCESS_RIGHT:Draft&size=100&from='.$page;
+        $curlopt                    = array(
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_PORT => 9200,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 40,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => $postcontent
+        );
+        $response                   = self::Curlrequest($url, $curlopt);
+        $response                   = json_decode($response, TRUE);
+        $responses["hits"]["total"] = $response["hits"]["total"];
+        $responses['aggregations']  = $response['aggregations'];
+        foreach ($response["hits"]["hits"] as $key => $value) {
+            $responses["hits"]["hits"][$key]           = $value["_source"]["INTRO"];
+            $responses["hits"]["hits"][$key]["_index"] = $value["_index"];
+            $responses["hits"]["hits"][$key]["_id"]    = $value["_id"];
+            $responses["hits"]["hits"][$key]["_type"]  = $value["_type"];
+        }
+        ;
+        return $responses;
+    }
+
+
 
 function ListIdentifiers($metadataPrefix,$from,$until,$set){
       $config=self::ConfigFile();
@@ -142,11 +189,7 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set){
      $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
      $request->addAttribute('verb','ListIdentifiers');
      $request->addAttribute('metadataPrefix',$metadataPrefix);
-      $dbdoi      = new \MongoClient("mongodb://" . $config['host'] . ':' . $config['port'], array(
-            'authSource' => $config['authSource'],
-            'username' => $config['username'],
-            'password' => $config['password']
-        ));
+      
      $array=array();
       if (empty($from)) {
           $from="0001-01-01";
@@ -162,7 +205,7 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set){
              $xml =self::badArgumentDate("until"); 
              return $xml;
      } 
-     $db     = $dbdoi->selectDB($config['authSource']);
+     /*$db     = $dbdoi->selectDB($config['authSource']);
      $collections = $db->getCollectionNames();
      foreach ($collections as $collection) {
          $collection = $db->selectCollection($collection);
@@ -175,16 +218,18 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set){
           array('INTRO.CREATION_DATE' => array( '$gt' => $from, '$lt' => $until ))
           ));
      $cursor = $collection->find($query);
-     $cursor->sort(array('INTRO.CREATION_DATE' => -1));
+
      foreach ($cursor as $key => $value) {
           $array[]=$value;
      }
-     }
+     }*/
+     $values=self::requestToAPI(0,$from,$until);
+
         $getrecord=$sxe->addChild('ListIdentifiers');
-     foreach ($array as $key => $value) {
+     foreach ($values['hits']['hits'] as $key => $value) {
           $header=$getrecord->addChild('header');
           $identifier=$header->addChild('identifier',$value['_id']);
-          $datestamp=$header->addChild('datestamp',$value['INTRO']['CREATION_DATE']);
+          $datestamp=$header->addChild('datestamp',$value['CREATION_DATE']);
           $Setspec=$header->addChild('setSpec',"??");
          
      }
