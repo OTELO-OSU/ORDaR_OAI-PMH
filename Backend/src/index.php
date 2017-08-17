@@ -30,10 +30,17 @@ $app->get('/oai', function ($request, $response,$args) {
 	    elseif ($allGetVars['verb']=='ListIdentifiers') {
 	    	$legitarg=['verb','metadataPrefix','from','until','set','resumptionToken'];
 	    	if (empty($allGetVars['metadataPrefix'])) {
-	    		$xml= $request->BadArgument();
+				if (empty($allGetVars['resumptionToken'])) {
+			    		$xml= $request->BadArgument();
+					
+				}
+				else{
+	    		$xml= $request->ListIdentifiers(null,null,null,null,$allGetVars['resumptionToken']);
+	    		}
+				
 	    	}
 	    	else{
-	    		$xml= $request->ListIdentifiers($allGetVars['metadataPrefix'],$allGetVars['from'],$allGetVars['until'],$allGetVars['set']);
+	    		$xml= $request->ListIdentifiers($allGetVars['metadataPrefix'],$allGetVars['from'],$allGetVars['until'],$allGetVars['set'],$allGetVars['resumptionToken']);
 	    	}
 	    }
 	    elseif ($allGetVars['verb']=='ListRecords') {

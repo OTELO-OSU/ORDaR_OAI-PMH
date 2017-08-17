@@ -142,7 +142,7 @@ function GetRecord($identifier,$metadataPrefix){
         return $rawData;
     }
 
- function requestToAPI($page,$from,$until)
+ function requestToAPI($page,$from,$until,$page)
     {
         $config=self::ConfigFile();
         $bdd                        = strtolower($config['authSource']);
@@ -151,7 +151,7 @@ function GetRecord($identifier,$metadataPrefix){
             }
 
        ';
-        $url                        = 'http://localhost/' . $bdd . '/_search?q=*AND%20INTRO.CREATION_DATE:['.$from.'%20TO%20'.$until.']%20AND%20NOT%20INTRO.ACCESS_RIGHT:Unpublished%20AND%20NOT%20INTRO.ACCESS_RIGHT:Draft&size=100&from='.$page;
+        $url                        = 'http://localhost/' . $bdd . '/_search?q=*AND%20INTRO.CREATION_DATE:['.$from.'%20TO%20'.$until.']%20AND%20NOT%20INTRO.ACCESS_RIGHT:Unpublished%20AND%20NOT%20INTRO.ACCESS_RIGHT:Draft&size=10&from='.$page;
         $curlopt                    = array(
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_PORT => 9200,
@@ -178,7 +178,7 @@ function GetRecord($identifier,$metadataPrefix){
 
 
 
-function ListIdentifiers($metadataPrefix,$from,$until,$set){
+function ListIdentifiers($metadataPrefix,$from,$until,$set,$resumptionToken){
       $config=self::ConfigFile();
       $sxe = new \SimpleXMLElement("<OAI-PMH/>");
      $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
@@ -189,8 +189,34 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set){
      $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
      $request->addAttribute('verb','ListIdentifiers');
      $request->addAttribute('metadataPrefix',$metadataPrefix);
-      
      $array=array();
+     $Token="";
+     $cursor=0;
+     if (!empty($resumptionToken)) {
+          $resumptionToken=base64_decode($resumptionToken);
+          $array=explode("AND", $resumptionToken);
+          $result=[];
+          foreach ($array as $key => $value) {
+               $values=explode("!", $value);
+               $result[$values[0]]=$values[1];
+          }
+          $metadataPrefix=$result['metadataPrefix'];
+         $from=$result['from'];
+         $until=$result['until'];
+         $cursor=$result['cursor'];       
+     }
+     if (!empty($metadataPrefix)) {
+     $Token.='metadataPrefix!'.$metadataPrefix;
+     }
+       if (!empty($from)) {
+     $Token.='ANDfrom!'.$from;
+     }
+       if (!empty($until)) {
+     $Token.='ANDuntil!'.$until;
+     }
+       if (!empty($set)) {
+     $Token.= 'ANDset!'.$set;
+     }
       if (empty($from)) {
           $from="0001-01-01";
      }
@@ -205,6 +231,7 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set){
              $xml =self::badArgumentDate("until"); 
              return $xml;
      } 
+
      /*$db     = $dbdoi->selectDB($config['authSource']);
      $collections = $db->getCollectionNames();
      foreach ($collections as $collection) {
@@ -223,9 +250,13 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set){
           $array[]=$value;
      }
      }*/
-     $values=self::requestToAPI(0,$from,$until);
-
+     $values=self::requestToAPI(0,$from,$until,$cursor);
+     $cursor=$cursor+10;
+     $Token.='ANDcursor!'.$cursor;
+    
         $getrecord=$sxe->addChild('ListIdentifiers');
+        $resumptionToken=$sxe->addChild('resumptionToken',base64_encode($Token));
+        $resumptionToken->addAttribute('completeListSize',$values['hits']['total']);
      foreach ($values['hits']['hits'] as $key => $value) {
           $header=$getrecord->addChild('header');
           $identifier=$header->addChild('identifier',$value['_id']);
