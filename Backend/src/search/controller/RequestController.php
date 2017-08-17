@@ -131,7 +131,7 @@ function GetRecord($identifier,$metadataPrefix){
 
 }
 
-function ListIdentifiers($metadataPrefix){
+function ListIdentifiers($metadataPrefix,$from,$until,$set){
       $config=self::ConfigFile();
       $sxe = new \SimpleXMLElement("<OAI-PMH/>");
      $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
@@ -148,14 +148,32 @@ function ListIdentifiers($metadataPrefix){
             'password' => $config['password']
         ));
      $array=array();
+      if (empty($from)) {
+          $from="0001-01-01";
+     }
+      if (empty($until)) {
+          $until="9999-12-31";
+     }
+     if (!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/",$from)) {
+             $xml=self::badArgumentDate("from"); 
+             return $xml;
+     } 
+     if (!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/",$until)) {
+             $xml =self::badArgumentDate("until"); 
+             return $xml;
+     } 
      $db     = $dbdoi->selectDB($config['authSource']);
      $collections = $db->getCollectionNames();
      foreach ($collections as $collection) {
          $collection = $db->selectCollection($collection);
-         $query=array('$or' => array(
-  array("INTRO.ACCESS_RIGHT" => "Closed"),
-  array("INTRO.ACCESS_RIGHT" => "Open"),
-   array("INTRO.ACCESS_RIGHT" => "Embargoed")));
+      $query=array('$and'=>array(
+          array('$or' => array(
+                 array("INTRO.ACCESS_RIGHT" => "Closed"),
+                 array("INTRO.ACCESS_RIGHT" => "Open"),
+                 array("INTRO.ACCESS_RIGHT" => "Embargoed"))),
+
+          array('INTRO.CREATION_DATE' => array( '$gt' => $from, '$lt' => $until ))
+          ));
      $cursor = $collection->find($query);
      $cursor->sort(array('INTRO.CREATION_DATE' => -1));
      foreach ($cursor as $key => $value) {
