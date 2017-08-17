@@ -74,8 +74,11 @@ function GetRecord($identifier,$metadataPrefix){
      foreach ($collections as $collection) {
          $collection = $db->selectCollection($collection);
           $query  = array(
-                     '_id' => $identifier
-                 );
+                     '_id' => $identifier,
+                 '$or' => array(
+  array("INTRO.ACCESS_RIGHT" => "Closed"),
+  array("INTRO.ACCESS_RIGHT" => "Open"),
+   array("INTRO.ACCESS_RIGHT" => "Embargoed")));;
      $cursor = $collection->find($query);
      foreach ($cursor as $key => $value) {
      }
@@ -148,8 +151,11 @@ function ListIdentifiers($metadataPrefix){
      $collections = $db->getCollectionNames();
      foreach ($collections as $collection) {
          $collection = $db->selectCollection($collection);
-         
-     $cursor = $collection->find();
+         $query=array('$or' => array(
+  array("INTRO.ACCESS_RIGHT" => "Closed"),
+  array("INTRO.ACCESS_RIGHT" => "Open"),
+   array("INTRO.ACCESS_RIGHT" => "Embargoed")));
+     $cursor = $collection->find($query);
      $cursor->sort(array('INTRO.CREATION_DATE' => -1));
      foreach ($cursor as $key => $value) {
           $array[]=$value;
@@ -191,8 +197,11 @@ function ListRecords($metadataPrefix){
      $collections = $db->getCollectionNames();
      foreach ($collections as $collection) {
          $collection = $db->selectCollection($collection);
-         
-     $cursor = $collection->find();
+         $query=array('$or' => array(
+  array("INTRO.ACCESS_RIGHT" => "Closed"),
+  array("INTRO.ACCESS_RIGHT" => "Open"),
+   array("INTRO.ACCESS_RIGHT" => "Embargoed")));
+     $cursor = $collection->find($query);
      $cursor->sort(array('INTRO.CREATION_DATE' => -1));
      foreach ($cursor as $key => $value) {
           $array[]=$value;
@@ -238,7 +247,28 @@ function ListRecords($metadataPrefix){
 
 
 
-function badArgument(){
+function ListSets(){
+      $config=self::ConfigFile();
+      $sxe = new \SimpleXMLElement("<OAI-PMH/>");
+     $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+     $sxe->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+     $sxe->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+     $sxe->addChild('responseDate', date("Y-m-d\TH:i:s\Z"));
+     $uri=explode('?', $_SERVER['REQUEST_URI'], 2);
+     $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
+     $request->addAttribute('verb','ListSets');
+     $Listsets=$sxe->addChild('ListSets');
+
+    
+     $xml = $sxe->asXML();
+    return $xml;
+
+}
+
+
+
+
+function badArgument($verb){
 	 $config=self::ConfigFile();
 	 $sxe = new \SimpleXMLElement("<OAI-PMH/>");
      $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
@@ -247,9 +277,25 @@ function badArgument(){
      $sxe->addChild('responseDate', date("Y-m-d\TH:i:s\Z"));
      $uri=explode('?', $_SERVER['REQUEST_URI'], 2);
      $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
-     $request->addAttribute('verb','Identify');
+     $request->addAttribute('verb',$verb);
      $identify=$sxe->addChild('error','The request includes illegal arguments, is missing required arguments, includes a repeated argument, or values for arguments have an illegal syntax.');
      $identify->addAttribute('code', 'badArgument');
+     $xml = $sxe->asXML();
+     return $xml;
+}
+
+function cannotDisseminateFormat($verb){
+      $config=self::ConfigFile();
+      $sxe = new \SimpleXMLElement("<OAI-PMH/>");
+     $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+     $sxe->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+     $sxe->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+     $sxe->addChild('responseDate', date("Y-m-d\TH:i:s\Z"));
+     $uri=explode('?', $_SERVER['REQUEST_URI'], 2);
+     $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
+     $request->addAttribute('verb',$verb);
+     $identify=$sxe->addChild('error','This format is unknown.');
+     $identify->addAttribute('code', 'cannotDisseminateFormat');
      $xml = $sxe->asXML();
      return $xml;
 }
