@@ -33,7 +33,7 @@ $app->get('/oai', function ($request, $response,$args) {
 	    		$xml= $request->BadArgument();
 	    	}
 	    	else{
-	    		$xml= $request->ListIdentifiers($allGetVars['metadataPrefix']);
+	    		$xml= $request->ListIdentifiers($allGetVars['metadataPrefix'],$allGetVars['from'],$allGetVars['until'],$allGetVars['set']);
 	    	}
 	    }
 	    elseif ($allGetVars['verb']=='ListRecords') {
@@ -42,7 +42,7 @@ $app->get('/oai', function ($request, $response,$args) {
 	    		$xml= $request->BadArgument($allGetVars['verb']);
 	    	}
 	    	else{
-	    		$xml= $request->ListRecords($allGetVars['metadataPrefix']);
+	    		$xml= $request->ListRecords($allGetVars['metadataPrefix'],$allGetVars['from'],$allGetVars['until'],$allGetVars['set']);
 	    	}
 	    }
 	    elseif ($allGetVars['verb']=='GetRecord') {

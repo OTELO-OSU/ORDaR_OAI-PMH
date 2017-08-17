@@ -40,9 +40,10 @@ function ListMetadataFormats(){
      $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
      $request->addAttribute('verb','ListMetadataFormats');
      $ListMetadataFormat1=$sxe->addChild('ListMetadataFormats');
-     $ListMetadataFormat1->addChild('metadataPrefix', "oai_dc");
-     $ListMetadataFormat1->addChild('schema', "http://catalogue.bnf.fr/schemas/TELAP.xsd");
-     $ListMetadataFormat1->addChild('metadataNamespace', "http://catalogue.bnf.fr/namespaces/TEL_ApplicationProfile
+     $ListMetadataFormat=$ListMetadataFormat1->addChild('metadataFormat');
+     $ListMetadataFormat->addChild('metadataPrefix', "oai_dc");
+     $ListMetadataFormat->addChild('schema', "http://www.openarchives.org/OAI/2.0/oai_dc.xsd");
+     $ListMetadataFormat->addChild('metadataNamespace', "http://www.openarchives.org/OAI/2.0/oai_dc
 ");
 
 
@@ -176,7 +177,7 @@ function ListIdentifiers($metadataPrefix){
 }
 
 
-function ListRecords($metadataPrefix){
+function ListRecords($metadataPrefix,$from,$until,$set){
       $config=self::ConfigFile();
       $sxe = new \SimpleXMLElement("<OAI-PMH/>");
      $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
@@ -193,14 +194,32 @@ function ListRecords($metadataPrefix){
             'password' => $config['password']
         ));
      $array=array();
+     if (empty($from)) {
+          $from="0001-01-01";
+     }
+      if (empty($until)) {
+          $until="9999-12-31";
+     }
+     if (!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/",$from)) {
+             $xml=self::badArgumentDate("from"); 
+             return $xml;
+     } 
+     if (!preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/",$until)) {
+             $xml =self::badArgumentDate("until"); 
+             return $xml;
+     } 
      $db     = $dbdoi->selectDB($config['authSource']);
      $collections = $db->getCollectionNames();
      foreach ($collections as $collection) {
          $collection = $db->selectCollection($collection);
-         $query=array('$or' => array(
-  array("INTRO.ACCESS_RIGHT" => "Closed"),
-  array("INTRO.ACCESS_RIGHT" => "Open"),
-   array("INTRO.ACCESS_RIGHT" => "Embargoed")));
+         $query=array('$and'=>array(
+          array('$or' => array(
+                 array("INTRO.ACCESS_RIGHT" => "Closed"),
+                 array("INTRO.ACCESS_RIGHT" => "Open"),
+                 array("INTRO.ACCESS_RIGHT" => "Embargoed"))),
+
+          array('INTRO.CREATION_DATE' => array( '$gt' => $from, '$lt' => $until ))
+          ));
      $cursor = $collection->find($query);
      $cursor->sort(array('INTRO.CREATION_DATE' => -1));
      foreach ($cursor as $key => $value) {
@@ -266,6 +285,21 @@ function ListSets(){
 }
 
 
+function badArgumentDate($arg){
+      $config=self::ConfigFile();
+      $sxe = new \SimpleXMLElement("<OAI-PMH/>");
+     $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+     $sxe->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+     $sxe->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+     $sxe->addChild('responseDate', date("Y-m-d\TH:i:s\Z"));
+     $uri=explode('?', $_SERVER['REQUEST_URI'], 2);
+     $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
+     $request->addAttribute('verb');
+     $identify=$sxe->addChild('error',"'".$arg."'".' is not a valid date.');
+     $identify->addAttribute('code', 'badArgument');
+     $xml = $sxe->asXML();
+     return $xml;
+}
 
 
 function badArgument($verb){
