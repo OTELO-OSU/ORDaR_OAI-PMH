@@ -55,7 +55,7 @@ $app->get('/oai', function ($request, $response,$args) {
 	    		}
 	    	}
 	    	else{
-	    		$xml= $request->ListRecords($allGetVars['metadataPrefix'],$allGetVars['from'],$allGetVars['until'],$allGetVars['set']);
+	    		$xml= $request->ListRecords($allGetVars['metadataPrefix'],$allGetVars['from'],$allGetVars['until'],$allGetVars['set'],$allGetVars['resumptionToken']);
 	    	}
 	    }
 	    elseif ($allGetVars['verb']=='GetRecord') {
@@ -88,7 +88,7 @@ $app->get('/oai', function ($request, $response,$args) {
 			}
 		}
 		if ($allGetVars['metadataPrefix']) {
-			$supportedformat=['oai_dc','test'];
+			$supportedformat=['oai_dc'];
 						
 					if (!in_array($allGetVars['metadataPrefix'], $supportedformat)){
 				    	$xml= $request->cannotDisseminateFormat($allGetVars['verb']);

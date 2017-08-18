@@ -166,7 +166,6 @@ function GetRecord($identifier,$metadataPrefix){
         $response                   = self::Curlrequest($url, $curlopt);
         $response                   = json_decode($response, TRUE);
         $responses["hits"]["total"] = $response["hits"]["total"];
-        $responses['aggregations']  = $response['aggregations'];
         foreach ($response["hits"]["hits"] as $key => $value) {
             $responses["hits"]["hits"][$key]           = $value["_source"]["INTRO"];
             $responses["hits"]["hits"][$key]["_index"] = $value["_index"];
@@ -194,7 +193,7 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set,$resumptionToken){
      $Token="";
      $cursor=0;
      if (!empty($resumptionToken)) {
-          $resumptionToken=base64_decode($resumptionToken);
+          $resumptionToken=openssl_decrypt($resumptionToken, "AES-128-CBC", $config['TokenGenerationKey']);
           $array=explode("AND", $resumptionToken);
           $result=[];
           foreach ($array as $key => $value) {
@@ -205,7 +204,9 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set,$resumptionToken){
          $from=$result['from'];
          $until=$result['until'];
          $cursor=$result['cursor'];       
-        if (empty($cursor)||empty($metadataPrefix)) {
+         $date = new \DateTime();
+         $currentime=$date->getTimestamp();
+        if (empty($cursor)||empty($metadataPrefix)OR($currentime>$result['time'])) {
                    $xml=self::badToken('ListRecords',$encodedresumptionToken);
                    return $xml;
               }   
@@ -239,9 +240,12 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set,$resumptionToken){
      $values=self::requestToAPI(0,$from,$until,$cursor,'desc',10);
      $cursor=$cursor+10;
      $Token.='ANDcursor!'.$cursor;
+     $date = new \DateTime();
+     $date->modify('+5 minutes');
+     $Token.='ANDtime!'.$date->getTimestamp();
     
         $getrecord=$sxe->addChild('ListIdentifiers');
-        $resumptionToken=$sxe->addChild('resumptionToken',base64_encode($Token));
+        $resumptionToken=$sxe->addChild('resumptionToken',openssl_encrypt($Token, "AES-128-CBC", $config['TokenGenerationKey']));
         $resumptionToken->addAttribute('completeListSize',$values['hits']['total']);
         if ($values['hits']['total']==0) {
              $xml=self::NoResult('ListIdentifiers',$metadataPrefix,$until,$from,$set);
@@ -280,7 +284,7 @@ function ListRecords($metadataPrefix,$from,$until,$set,$encodedresumptionToken){
     $Token="";
      $cursor=0;
      if (!empty($encodedresumptionToken)) {
-          $resumptionToken=base64_decode($encodedresumptionToken);
+          $resumptionToken=openssl_decrypt($encodedresumptionToken, "AES-128-CBC", $config['TokenGenerationKey']);
           $array=explode("AND", $resumptionToken);
           $result=[];
           foreach ($array as $key => $value) {
@@ -291,8 +295,9 @@ function ListRecords($metadataPrefix,$from,$until,$set,$encodedresumptionToken){
          $from=$result['from'];
          $until=$result['until'];
          $cursor=$result['cursor'];  
-
-         if (empty($cursor)||empty($metadataPrefix)) {
+          $date = new \DateTime();
+         $currentime=$date->getTimestamp();
+         if (empty($cursor)||empty($metadataPrefix)OR($currentime>$result['time'])) {
                    $xml=self::badToken('ListRecords',$encodedresumptionToken);
                    return $xml;
               }     
@@ -328,6 +333,9 @@ function ListRecords($metadataPrefix,$from,$until,$set,$encodedresumptionToken){
      $values=self::requestToAPI(0,$from,$until,$cursor,'desc',10);
      $cursor=$cursor+10;
      $Token.='ANDcursor!'.$cursor;
+     $date = new \DateTime();
+     $date->modify('+5 minutes');
+     $Token.='ANDtime!'.$date->getTimestamp();
   
      $getrecord=$sxe->addChild('ListRecords');
      foreach ($values['hits']['hits'] as $key => $value) {
@@ -361,7 +369,7 @@ function ListRecords($metadataPrefix,$from,$until,$set,$encodedresumptionToken){
           $dc_accessright=$oai_dc->addChild('dc:dc:dc_rights',$value['ACCESS_RIGHT']);
          
      }
-     $resumptionToken=$sxe->addChild('resumptionToken',base64_encode($Token));
+     $resumptionToken=$sxe->addChild('resumptionToken',openssl_encrypt($Token, "AES-128-CBC", $config['TokenGenerationKey']));
         $resumptionToken->addAttribute('completeListSize',$values['hits']['total']);
          if ($values['hits']['total']==0) {
              $xml=self::NoResult('ListIdentifiers',$metadataPrefix,$until,$from,$set);
@@ -448,7 +456,7 @@ function badToken($verb,$token){
      $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
      $request->addAttribute('verb',$verb);
      $request->addAttribute('resumptionToken',$token);
-     $identify=$sxe->addChild('error','The value of the resumptionToken argument is invalid');
+     $identify=$sxe->addChild('error','The value of the resumptionToken argument is invalid or expired');
      $identify->addAttribute('code', 'badResumptionToken');
      $xml = $sxe->asXML();
      return $xml;
