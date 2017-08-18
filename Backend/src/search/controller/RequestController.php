@@ -205,6 +205,10 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set,$resumptionToken){
          $from=$result['from'];
          $until=$result['until'];
          $cursor=$result['cursor'];       
+        if (empty($cursor)||empty($metadataPrefix)) {
+                   $xml=self::badToken('ListRecords',$encodedresumptionToken);
+                   return $xml;
+              }   
      }
      if (!empty($metadataPrefix)) {
      $Token.='metadataPrefix!'.$metadataPrefix;
@@ -232,25 +236,6 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set,$resumptionToken){
              $xml =self::badArgumentDate("until"); 
              return $xml;
      } 
-
-     /*$db     = $dbdoi->selectDB($config['authSource']);
-     $collections = $db->getCollectionNames();
-     foreach ($collections as $collection) {
-         $collection = $db->selectCollection($collection);
-      $query=array('$and'=>array(
-          array('$or' => array(
-                 array("INTRO.ACCESS_RIGHT" => "Closed"),
-                 array("INTRO.ACCESS_RIGHT" => "Open"),
-                 array("INTRO.ACCESS_RIGHT" => "Embargoed"))),
-
-          array('INTRO.CREATION_DATE' => array( '$gt' => $from, '$lt' => $until ))
-          ));
-     $cursor = $collection->find($query);
-
-     foreach ($cursor as $key => $value) {
-          $array[]=$value;
-     }
-     }*/
      $values=self::requestToAPI(0,$from,$until,$cursor,'desc',10);
      $cursor=$cursor+10;
      $Token.='ANDcursor!'.$cursor;
@@ -258,6 +243,10 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set,$resumptionToken){
         $getrecord=$sxe->addChild('ListIdentifiers');
         $resumptionToken=$sxe->addChild('resumptionToken',base64_encode($Token));
         $resumptionToken->addAttribute('completeListSize',$values['hits']['total']);
+        if ($values['hits']['total']==0) {
+             $xml=self::NoResult('ListIdentifiers',$metadataPrefix,$until,$from,$set);
+             return $xml;
+        }
      foreach ($values['hits']['hits'] as $key => $value) {
           $header=$getrecord->addChild('header');
           $identifier=$header->addChild('identifier',$value['_id']);
@@ -272,7 +261,7 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set,$resumptionToken){
 }
 
 
-function ListRecords($metadataPrefix,$from,$until,$set,$resumptionToken){
+function ListRecords($metadataPrefix,$from,$until,$set,$encodedresumptionToken){
       $config=self::ConfigFile();
       $sxe = new \SimpleXMLElement("<OAI-PMH/>");
      $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
@@ -290,18 +279,23 @@ function ListRecords($metadataPrefix,$from,$until,$set,$resumptionToken){
         ));
     $Token="";
      $cursor=0;
-     if (!empty($resumptionToken)) {
-          $resumptionToken=base64_decode($resumptionToken);
+     if (!empty($encodedresumptionToken)) {
+          $resumptionToken=base64_decode($encodedresumptionToken);
           $array=explode("AND", $resumptionToken);
           $result=[];
           foreach ($array as $key => $value) {
                $values=explode("!", $value);
                $result[$values[0]]=$values[1];
           }
-          $metadataPrefix=$result['metadataPrefix'];
+         $metadataPrefix=$result['metadataPrefix'];
          $from=$result['from'];
          $until=$result['until'];
-         $cursor=$result['cursor'];       
+         $cursor=$result['cursor'];  
+
+         if (empty($cursor)||empty($metadataPrefix)) {
+                   $xml=self::badToken('ListRecords',$encodedresumptionToken);
+                   return $xml;
+              }     
      }
      if (!empty($metadataPrefix)) {
      $Token.='metadataPrefix!'.$metadataPrefix;
@@ -330,45 +324,11 @@ function ListRecords($metadataPrefix,$from,$until,$set,$resumptionToken){
              return $xml;
      } 
 
-     /*$db     = $dbdoi->selectDB($config['authSource']);
-     $collections = $db->getCollectionNames();
-     foreach ($collections as $collection) {
-         $collection = $db->selectCollection($collection);
-      $query=array('$and'=>array(
-          array('$or' => array(
-                 array("INTRO.ACCESS_RIGHT" => "Closed"),
-                 array("INTRO.ACCESS_RIGHT" => "Open"),
-                 array("INTRO.ACCESS_RIGHT" => "Embargoed"))),
-
-          array('INTRO.CREATION_DATE' => array( '$gt' => $from, '$lt' => $until ))
-          ));
-     $cursor = $collection->find($query);
-
-     foreach ($cursor as $key => $value) {
-          $array[]=$value;
-     }
-     }*/
+  
      $values=self::requestToAPI(0,$from,$until,$cursor,'desc',10);
      $cursor=$cursor+10;
      $Token.='ANDcursor!'.$cursor;
-    /* $db     = $dbdoi->selectDB($config['authSource']);
-     $collections = $db->getCollectionNames();
-     foreach ($collections as $collection) {
-         $collection = $db->selectCollection($collection);
-         $query=array('$and'=>array(
-          array('$or' => array(
-                 array("INTRO.ACCESS_RIGHT" => "Closed"),
-                 array("INTRO.ACCESS_RIGHT" => "Open"),
-                 array("INTRO.ACCESS_RIGHT" => "Embargoed"))),
-
-          array('INTRO.CREATION_DATE' => array( '$gt' => $from, '$lt' => $until ))
-          ));
-     $cursor = $collection->find($query);
-     $cursor->sort(array('INTRO.CREATION_DATE' => -1));
-     foreach ($cursor as $key => $value) {
-          $array[]=$value;
-     }
-     }*/
+  
      $getrecord=$sxe->addChild('ListRecords');
      foreach ($values['hits']['hits'] as $key => $value) {
         $record=$getrecord->addChild('record');
@@ -403,6 +363,10 @@ function ListRecords($metadataPrefix,$from,$until,$set,$resumptionToken){
      }
      $resumptionToken=$sxe->addChild('resumptionToken',base64_encode($Token));
         $resumptionToken->addAttribute('completeListSize',$values['hits']['total']);
+         if ($values['hits']['total']==0) {
+             $xml=self::NoResult('ListIdentifiers',$metadataPrefix,$until,$from,$set);
+             return $xml;
+        }
 
      $xml = $sxe->asXML();
     return $xml;
@@ -429,6 +393,32 @@ function ListSets(){
 
 }
 
+function NoResult($verb,$metadataPrefix,$until,$from,$set){
+      $config=self::ConfigFile();
+      $sxe = new \SimpleXMLElement("<OAI-PMH/>");
+     $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+     $sxe->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+     $sxe->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+     $sxe->addChild('responseDate', date("Y-m-d\TH:i:s\Z"));
+     $uri=explode('?', $_SERVER['REQUEST_URI'], 2);
+     $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
+     $request->addAttribute('verb',$verb);
+     $request->addAttribute('metadataPrefix',$metadataPrefix);
+     if (!empty($until)) {
+      $request->addAttribute('until',$until);
+     }
+      if (!empty($from)) {
+     $request->addAttribute('from',$from);
+     }
+      if (!empty($set)) {
+     $request->addAttribute('set',$set);
+     }
+     $identify=$sxe->addChild('error','The combination of the values of the from, until, set, and metadataPrefix arguments results in an empty list.');
+     $identify->addAttribute('code', 'noRecordsMatch');
+     $xml = $sxe->asXML();
+     return $xml;
+}
+
 
 function badArgumentDate($arg){
       $config=self::ConfigFile();
@@ -445,6 +435,25 @@ function badArgumentDate($arg){
      $xml = $sxe->asXML();
      return $xml;
 }
+
+
+function badToken($verb,$token){
+      $config=self::ConfigFile();
+      $sxe = new \SimpleXMLElement("<OAI-PMH/>");
+     $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
+     $sxe->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+     $sxe->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd');
+     $sxe->addChild('responseDate', date("Y-m-d\TH:i:s\Z"));
+     $uri=explode('?', $_SERVER['REQUEST_URI'], 2);
+     $request = $sxe->addChild('request', $config['BaseUrl'].$uri[0]);
+     $request->addAttribute('verb',$verb);
+     $request->addAttribute('resumptionToken',$token);
+     $identify=$sxe->addChild('error','The value of the resumptionToken argument is invalid');
+     $identify->addAttribute('code', 'badResumptionToken');
+     $xml = $sxe->asXML();
+     return $xml;
+}
+
 
 
 function badArgument($verb){
