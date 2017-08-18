@@ -21,7 +21,8 @@ function identify(){
      $identify->addChild('baseURL', $config['BaseUrl']);
      $identify->addChild('protocolVersion', $config['ProtocolVersion']);
      $identify->addChild('adminEmail', $config['adminEmail']);
-     $identify->addChild('earliestDatestamp', "??");
+     $values=self::requestToAPI(0,"0000-01-01","9999-12-31","0",'asc',1);
+     $identify->addChild('earliestDatestamp', $values['hits']['hits'][0]['CREATION_DATE']);
      $identify->addChild('deletedRecord', $config['deletedRecord']);
      $identify->addChild('granularity', $config['granularity']);
      $xml = $sxe->asXML();
@@ -142,16 +143,16 @@ function GetRecord($identifier,$metadataPrefix){
         return $rawData;
     }
 
- function requestToAPI($page,$from,$until,$page)
+ function requestToAPI($page,$from,$until,$page,$order,$size)
     {
         $config=self::ConfigFile();
         $bdd                        = strtolower($config['authSource']);
         $postcontent = '{  
-            "sort": { "INTRO.CREATION_DATE": { "order": "desc" }} 
+            "sort": { "INTRO.CREATION_DATE": { "order": "'.$order.'" }} 
             }
 
        ';
-        $url                        = 'http://localhost/' . $bdd . '/_search?q=*AND%20INTRO.CREATION_DATE:['.$from.'%20TO%20'.$until.']%20AND%20NOT%20INTRO.ACCESS_RIGHT:Unpublished%20AND%20NOT%20INTRO.ACCESS_RIGHT:Draft&size=10&from='.$page;
+        $url                        = 'http://localhost/' . $bdd . '/_search?q=*AND%20INTRO.CREATION_DATE:['.$from.'%20TO%20'.$until.']%20AND%20NOT%20INTRO.ACCESS_RIGHT:Unpublished%20AND%20NOT%20INTRO.ACCESS_RIGHT:Draft&size='.$size.'&from='.$page;
         $curlopt                    = array(
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_PORT => 9200,
@@ -250,7 +251,7 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set,$resumptionToken){
           $array[]=$value;
      }
      }*/
-     $values=self::requestToAPI(0,$from,$until,$cursor);
+     $values=self::requestToAPI(0,$from,$until,$cursor,'desc',10);
      $cursor=$cursor+10;
      $Token.='ANDcursor!'.$cursor;
     
@@ -271,7 +272,7 @@ function ListIdentifiers($metadataPrefix,$from,$until,$set,$resumptionToken){
 }
 
 
-function ListRecords($metadataPrefix,$from,$until,$set){
+function ListRecords($metadataPrefix,$from,$until,$set,$resumptionToken){
       $config=self::ConfigFile();
       $sxe = new \SimpleXMLElement("<OAI-PMH/>");
      $sxe->addAttribute('xmlns', 'http://www.openarchives.org/OAI/2.0/');
@@ -287,8 +288,34 @@ function ListRecords($metadataPrefix,$from,$until,$set){
             'username' => $config['username'],
             'password' => $config['password']
         ));
-     $array=array();
-     if (empty($from)) {
+    $Token="";
+     $cursor=0;
+     if (!empty($resumptionToken)) {
+          $resumptionToken=base64_decode($resumptionToken);
+          $array=explode("AND", $resumptionToken);
+          $result=[];
+          foreach ($array as $key => $value) {
+               $values=explode("!", $value);
+               $result[$values[0]]=$values[1];
+          }
+          $metadataPrefix=$result['metadataPrefix'];
+         $from=$result['from'];
+         $until=$result['until'];
+         $cursor=$result['cursor'];       
+     }
+     if (!empty($metadataPrefix)) {
+     $Token.='metadataPrefix!'.$metadataPrefix;
+     }
+       if (!empty($from)) {
+     $Token.='ANDfrom!'.$from;
+     }
+       if (!empty($until)) {
+     $Token.='ANDuntil!'.$until;
+     }
+       if (!empty($set)) {
+     $Token.= 'ANDset!'.$set;
+     }
+      if (empty($from)) {
           $from="0001-01-01";
      }
       if (empty($until)) {
@@ -302,7 +329,29 @@ function ListRecords($metadataPrefix,$from,$until,$set){
              $xml =self::badArgumentDate("until"); 
              return $xml;
      } 
-     $db     = $dbdoi->selectDB($config['authSource']);
+
+     /*$db     = $dbdoi->selectDB($config['authSource']);
+     $collections = $db->getCollectionNames();
+     foreach ($collections as $collection) {
+         $collection = $db->selectCollection($collection);
+      $query=array('$and'=>array(
+          array('$or' => array(
+                 array("INTRO.ACCESS_RIGHT" => "Closed"),
+                 array("INTRO.ACCESS_RIGHT" => "Open"),
+                 array("INTRO.ACCESS_RIGHT" => "Embargoed"))),
+
+          array('INTRO.CREATION_DATE' => array( '$gt' => $from, '$lt' => $until ))
+          ));
+     $cursor = $collection->find($query);
+
+     foreach ($cursor as $key => $value) {
+          $array[]=$value;
+     }
+     }*/
+     $values=self::requestToAPI(0,$from,$until,$cursor,'desc',10);
+     $cursor=$cursor+10;
+     $Token.='ANDcursor!'.$cursor;
+    /* $db     = $dbdoi->selectDB($config['authSource']);
      $collections = $db->getCollectionNames();
      foreach ($collections as $collection) {
          $collection = $db->selectCollection($collection);
@@ -319,13 +368,13 @@ function ListRecords($metadataPrefix,$from,$until,$set){
      foreach ($cursor as $key => $value) {
           $array[]=$value;
      }
-     }
+     }*/
      $getrecord=$sxe->addChild('ListRecords');
-     foreach ($array as $key => $value) {
+     foreach ($values['hits']['hits'] as $key => $value) {
         $record=$getrecord->addChild('record');
           $header=$record->addChild('header');
           $identifier=$header->addChild('identifier',$value['_id']);
-          $datestamp=$header->addChild('datestamp',$value['INTRO']['CREATION_DATE']);
+          $datestamp=$header->addChild('datestamp',$value['CREATION_DATE']);
           $Setspec=$header->addChild('setSpec',"??");
           $metadata=$record->addChild('metadata');
           $oai_dc=$metadata->addChild('oai_dc:oai_dc:dc');
@@ -334,24 +383,26 @@ function ListRecords($metadataPrefix,$from,$until,$set){
           $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
           $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd');
           $dc_identifier=$oai_dc->addChild('dc:dc:identifier',$identifier);
-          $dc_title=$oai_dc->addChild('dc:dc:title',$value['INTRO']['TITLE']);
-          foreach ($value['INTRO']['FILE_CREATOR'] as $key => $author) {
+          $dc_title=$oai_dc->addChild('dc:dc:title',$value['TITLE']);
+          foreach ($value['FILE_CREATOR'] as $key => $author) {
                 $oai_dc->addChild('dc:dc:creator', $author['DISPLAY_NAME']);
             }
-          $dc_date=$oai_dc->addChild('dc:dc:date',$value['INTRO']['CREATION_DATE']);
-          $dc_description=$oai_dc->addChild('dc:dc:description',$value['INTRO']['DATA_DESCRIPTION']);
-          $dc_language=$oai_dc->addChild('dc:dc:language',$value['INTRO']['LANGUAGE']);
-          $dc_publisher=$oai_dc->addChild('dc:dc:dc_publisher',$value['INTRO']['PUBLISHER']);
-          foreach ($value['INTRO']['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
+          $dc_date=$oai_dc->addChild('dc:dc:date',$value['CREATION_DATE']);
+          $dc_description=$oai_dc->addChild('dc:dc:description',$value['DATA_DESCRIPTION']);
+          $dc_language=$oai_dc->addChild('dc:dc:language',$value['LANGUAGE']);
+          $dc_publisher=$oai_dc->addChild('dc:dc:dc_publisher',$value['PUBLISHER']);
+          foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                 $oai_dc->addChild('dc:dc:subject', $SCIENTIFIC_FIELD['NAME']);
             }
             /* foreach ($value['INTRO']['INSTITUTION'] as $key => $INSTITUTIONS) {
                 $oai_dc->addChild('dc:dc:institution', $INSTITUTIONS['NAME']);
             }*/
           //$dc_license=$oai_dc->addChild('dc:dc:dc_license',$value['INTRO']['LICENSE']);
-          $dc_accessright=$oai_dc->addChild('dc:dc:dc_rights',$value['INTRO']['ACCESS_RIGHT']);
+          $dc_accessright=$oai_dc->addChild('dc:dc:dc_rights',$value['ACCESS_RIGHT']);
          
      }
+     $resumptionToken=$sxe->addChild('resumptionToken',base64_encode($Token));
+        $resumptionToken->addAttribute('completeListSize',$values['hits']['total']);
 
      $xml = $sxe->asXML();
     return $xml;
