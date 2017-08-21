@@ -73,7 +73,7 @@ class RequestController
                 $getrecord  = $sxe->addChild('GetRecord');
                 $recordxml     = $getrecord->addChild('record');
                 $header     = $recordxml->addChild('header');
-                $identifier = $header->addChild('identifier', $identifier);
+                $identifier = $header->addChild('identifier', "info:doi:".$identifier);
                 $datestamp  = $header->addChild('datestamp', $record['_source']['INTRO']['PUBLICATION_DATE']);
                foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $value) {
                     $Setspec    = $header->addChild('setSpec',  str_replace(' ', '_', $value['NAME']));
@@ -96,7 +96,7 @@ class RequestController
                 foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                     $oai_dc->addChild('dc:dc:subject', $SCIENTIFIC_FIELD['NAME']);
                 }
-                $dc_accessright = $oai_dc->addChild('dc:dc:dc_rights', $record['_source']['INTRO']['ACCESS_RIGHT']);
+                $dc_accessright = $oai_dc->addChild('dc:dc:dc_rights', "info:eu-repo/semantics/".strtolower($record['_source']['INTRO']['ACCESS_RIGHT'])."Access");
         }
         else{
             $identify = $sxe->addChild('error', ' "' . $identifier . '" is unknown or illegal in this repository');
@@ -158,6 +158,7 @@ class RequestController
         $responses["hits"]["total"] = $response["hits"]["total"];
         foreach ($response["hits"]["hits"] as $key => $value) {
             $responses["hits"]["hits"][$key]           = $value["_source"]["INTRO"];
+            $responses["hits"]["hits"][$key]['DATA']          = $value["_source"]["DATA"];
             $responses["hits"]["hits"][$key]["_index"] = $value["_index"];
             $responses["hits"]["hits"][$key]["_id"]    = $value["_id"];
             $responses["hits"]["hits"][$key]["_type"]  = $value["_type"];
@@ -310,7 +311,7 @@ class RequestController
         }
         foreach ($values['hits']['hits'] as $key => $value) {
             $header     = $getrecord->addChild('header');
-            $identifier = $header->addChild('identifier', $value['_id']);
+            $identifier = $header->addChild('identifier', "info:doi:".$value['_id']);
             $datestamp  = $header->addChild('datestamp', $value['PUBLICATION_DATE']);
             foreach ($value['SCIENTIFIC_FIELD'] as $key => $value) {
                $Setspec    = $header->addChild('setSpec', str_replace(' ', '_', $value['NAME']));
@@ -397,7 +398,7 @@ class RequestController
         foreach ($values['hits']['hits'] as $key => $value) {
             $record     = $getrecord->addChild('record');
             $header     = $record->addChild('header');
-            $identifier = $header->addChild('identifier', $value['_id']);
+            $identifier = $header->addChild('identifier', "info:doi:".$value['_id']);
             $datestamp  = $header->addChild('datestamp', $value['PUBLICATION_DATE']);
             foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                $Setspec    = $header->addChild('setSpec', str_replace(' ', '_', $SCIENTIFIC_FIELD['NAME']));
@@ -419,7 +420,10 @@ class RequestController
             foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                 $oai_dc->addChild('dc:dc:subject',$SCIENTIFIC_FIELD['NAME']);
             }
-            $dc_accessright = $oai_dc->addChild('dc:dc:dc_rights', $value['ACCESS_RIGHT']);          
+
+          $oai_dc->addChild('dc:dc:type',"info:eu-repo/semantics/DataSet");
+            
+            $dc_accessright = $oai_dc->addChild('dc:dc:dc_rights',"info:eu-repo/semantics/".strtolower($value['ACCESS_RIGHT'])."Access");          
         }
         if ($values['hits']['total'] > $cursor) {
             $resumptionToken = $sxe->addChild('resumptionToken', urlencode(openssl_encrypt($Token, "AES-128-CBC", $config['TokenGenerationKey'])));
