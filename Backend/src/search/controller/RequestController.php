@@ -156,7 +156,7 @@ class RequestController
         $config = self::ConfigFile();
         $bdd    = strtolower($config['authSource']);
         if (!empty($set)) {
-            $set = "%20AND%20_type:" . $set;
+            $set = "%20AND%20INTRO.SCIENTIFIC_FIELD.NAME:" . $set;
         } else {
             $set = "";
         }
@@ -187,6 +187,47 @@ class RequestController
         }
         ;
         return $responses;
+    }
+
+     function requestSetToAPI()
+    {
+        $config = self::ConfigFile();
+        $bdd    = strtolower($config['authSource']);
+        $postcontent                = '{  
+            "sort": { "INTRO.CREATION_DATE": { "order": "' . $order . '" }} 
+            }
+
+       ';
+        $url                        = 'http://localhost/' . $bdd . '/_search?q=*';
+        $postcontent = '{  
+            "sort": { "INTRO.METADATA_DATE": { "order": "desc" }} , 
+            "_source": { 
+            "excludes": [ "DATA" ] 
+             }, 
+            "aggs" : {   
+                "scientific_field" : {   
+                    "terms" : {   
+                      "field" : "INTRO.SCIENTIFIC_FIELD.NAME"  
+                    }  
+                } 
+            }  
+        }';
+        $curlopt                    = array(
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_PORT => 9200,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 40,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => $postcontent
+        );
+        $response                   = self::Curlrequest($url, $curlopt);
+        $response                   = json_decode($response, TRUE);
+        $response                   = $response['aggregations']['scientific_field']['buckets'];
+       
+        ;
+        return $response;
     }
     
     
@@ -273,7 +314,9 @@ class RequestController
             $header     = $getrecord->addChild('header');
             $identifier = $header->addChild('identifier', $value['_id']);
             $datestamp  = $header->addChild('datestamp', $value['CREATION_DATE']);
-            $Setspec    = $header->addChild('setSpec', $value['_type']);
+            foreach ($value['SCIENTIFIC_FIELD'] as $key => $value) {
+               $Setspec    = $header->addChild('setSpec', $value['NAME']);
+            }
             
         }
         
@@ -358,8 +401,9 @@ class RequestController
             $header     = $record->addChild('header');
             $identifier = $header->addChild('identifier', $value['_id']);
             $datestamp  = $header->addChild('datestamp', $value['CREATION_DATE']);
-            $Setspec    = $header->addChild('setSpec', $value['_type']);
-            $metadata   = $record->addChild('metadata');
+            foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
+               $Setspec    = $header->addChild('setSpec', $SCIENTIFIC_FIELD['NAME']);
+            }            $metadata   = $record->addChild('metadata');
             $oai_dc     = $metadata->addChild('oai_dc:oai_dc:dc');
             $oai_dc->addAttribute('xmlns:xmlns:dc', 'http://purl.org/dc/elements/1.1/');
             $oai_dc->addAttribute('xmlns:xmlns:oai_dc', 'http://www.openarchives.org/OAI/2.0/oai_dc/');
@@ -377,8 +421,7 @@ class RequestController
             foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                 $oai_dc->addChild('dc:dc:subject', $SCIENTIFIC_FIELD['NAME']);
             }
-            $dc_accessright = $oai_dc->addChild('dc:dc:dc_rights', $value['ACCESS_RIGHT']);
-            
+            $dc_accessright = $oai_dc->addChild('dc:dc:dc_rights', $value['ACCESS_RIGHT']);          
         }
         if ($values['hits']['total'] > $cursor) {
             $resumptionToken = $sxe->addChild('resumptionToken', urlencode(openssl_encrypt($Token, "AES-128-CBC", $config['TokenGenerationKey'])));
@@ -408,17 +451,11 @@ class RequestController
         $request = $sxe->addChild('request', $config['BaseUrl'] . $uri[0]);
         $request->addAttribute('verb', 'ListSets');
         $Listsets    = $sxe->addChild('ListSets');
-        $dbdoi       = new \MongoClient("mongodb://" . $config['host'] . ':' . $config['port'], array(
-            'authSource' => $config['authSource'],
-            'username' => $config['username'],
-            'password' => $config['password']
-        ));
-        $db          = $dbdoi->selectDB($config['authSource']);
-        $collections = $db->getCollectionNames();
-        foreach ($collections as $key => $value) {
+        $values = self::requestSetToAPI();
+        foreach ($values as $key => $value) {
             $sets = $Listsets->addChild('set');
-            $sets->addChild('setSpec', $value);
-            $sets->addChild('setName', $value);
+            $sets->addChild('setSpec', $value['key']);
+            $sets->addChild('setName', $value['key']);
             
         }
         
