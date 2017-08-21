@@ -5,7 +5,8 @@ OAI-PHM implementation
 
 **Installation** 
 
-  Cette application OAI-PMH requiert l'installation de l'entrepot de données.
+  Cette application OAI-PMH requiert l'installation de l'entrepot de données
+  https://github.com/OTELO-OSU/ORDaR
 
   Elle utilise ElasticSearch.
 
@@ -15,16 +16,19 @@ OAI-PHM implementation
 
     sudo apt-get install php5.6-curl
 
-
+Clone du projet:
+  
+    git clone https://github.com/OTELO-OSU/ORDaR_OAI-PMH.git
+  
  Configuration apache:
     
     on active mod_rewrite :
       sudo a2enmod rewrite
 
+     Exemple:
+     DocumentRoot /var/www/html/ORDaR_OAI-PMH/Backend/src
 
-     DocumentRoot /var/www/html/ORDaR/Frontend/src/
-
-    <Directory /var/www/html/ORDaR_OAI-PMH/ORDaR_OAI-PMH/Backend/src>
+    <Directory /var/www/html/ORDaR_OAI-PMH/Backend/src>
         AllowOverride All
         Order allow,deny
         allow from all
