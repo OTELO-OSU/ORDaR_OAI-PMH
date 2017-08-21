@@ -94,11 +94,12 @@ class RequestController
                 $dc_date        = $oai_dc->addChild('dc:dc:date', $record['_source']['INTRO']['PUBLICATION_DATE']);
                 $dc_description = $oai_dc->addChild('dc:dc:description', $record['_source']['INTRO']['DATA_DESCRIPTION']);
                 $dc_language    = $oai_dc->addChild('dc:dc:language', $record['_source']['INTRO']['LANGUAGE']);
-                $dc_publisher   = $oai_dc->addChild('dc:dc:dc_publisher', $record['_source']['INTRO']['PUBLISHER']);
+                $dc_publisher   = $oai_dc->addChild('dc:dc:publisher', $record['_source']['INTRO']['PUBLISHER']);
+               $oai_dc->addChild('dc:dc:type',"info:eu-repo/semantics/DataSet");
                 foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                     $oai_dc->addChild('dc:dc:subject', $SCIENTIFIC_FIELD['NAME']);
                 }
-                $dc_accessright = $oai_dc->addChild('dc:dc:dc_rights', "info:eu-repo/semantics/".strtolower($record['_source']['INTRO']['ACCESS_RIGHT'])."Access");
+                $dc_accessright = $oai_dc->addChild('dc:dc:rights', "info:eu-repo/semantics/".strtolower($record['_source']['INTRO']['ACCESS_RIGHT'])."Access");
         }
         else{
             $identify = $sxe->addChild('error', ' "' . $identifier . '" is unknown or illegal in this repository');
@@ -425,7 +426,7 @@ class RequestController
 
           $oai_dc->addChild('dc:dc:type',"info:eu-repo/semantics/DataSet");
             
-            $dc_accessright = $oai_dc->addChild('dc:dc:dc_rights',"info:eu-repo/semantics/".strtolower($value['ACCESS_RIGHT'])."Access");          
+            $dc_accessright = $oai_dc->addChild('dc:dc:rights',"info:eu-repo/semantics/".strtolower($value['ACCESS_RIGHT'])."Access");          
         }
         if ($values['hits']['total'] > $cursor) {
             $resumptionToken = $sxe->addChild('resumptionToken', urlencode(openssl_encrypt($Token, "AES-128-CBC", $config['TokenGenerationKey'])));
@@ -462,7 +463,9 @@ class RequestController
             $sets->addChild('setName', $value['key']);
             
         }
-        
+          $sets = $Listsets->addChild('set');
+            $sets->addChild('setSpec', "openaire");
+            $sets->addChild('setName', "openaire");
         $xml = $sxe->asXML();
         return $xml;
         
