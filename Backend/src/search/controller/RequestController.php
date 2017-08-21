@@ -358,7 +358,7 @@ class RequestController
             $header     = $record->addChild('header');
             $identifier = $header->addChild('identifier', $value['_id']);
             $datestamp  = $header->addChild('datestamp', $value['CREATION_DATE']);
-            $Setspec    = $header->addChild('setSpec', "??");
+            $Setspec    = $header->addChild('setSpec', $value['_type']);
             $metadata   = $record->addChild('metadata');
             $oai_dc     = $metadata->addChild('oai_dc:oai_dc:dc');
             $oai_dc->addAttribute('xmlns:xmlns:dc', 'http://purl.org/dc/elements/1.1/');
