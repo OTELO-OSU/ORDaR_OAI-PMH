@@ -95,7 +95,7 @@ class RequestController
                 $dc_description = $oai_dc->addChild('dc:dc:description', $record['_source']['INTRO']['DATA_DESCRIPTION']);
                 $dc_language    = $oai_dc->addChild('dc:dc:language', $record['_source']['INTRO']['LANGUAGE']);
                 $dc_publisher   = $oai_dc->addChild('dc:dc:publisher', $record['_source']['INTRO']['PUBLISHER']);
-               $oai_dc->addChild('dc:dc:type',"info:eu-repo/semantics/DataSet");
+               $oai_dc->addChild('dc:dc:type',"info:eu-repo/semantics/other");
                 foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                     $oai_dc->addChild('dc:dc:subject', $SCIENTIFIC_FIELD['NAME']);
                 }
@@ -424,7 +424,7 @@ class RequestController
                 $oai_dc->addChild('dc:dc:subject',$SCIENTIFIC_FIELD['NAME']);
             }
 
-          $oai_dc->addChild('dc:dc:type',"info:eu-repo/semantics/DataSet");
+          $oai_dc->addChild('dc:dc:type',"info:eu-repo/semantics/other");
             
             $dc_accessright = $oai_dc->addChild('dc:dc:rights',"info:eu-repo/semantics/".strtolower($value['ACCESS_RIGHT'])."Access");          
         }
