@@ -78,6 +78,8 @@ class RequestController
                foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $value) {
                     $Setspec    = $header->addChild('setSpec',  str_replace(' ', '_', $value['NAME']));
                }                
+                            $header->addChild('setSpec', 'openaire');
+
                $metadata   = $recordxml->addChild('metadata');
                 $oai_dc     = $metadata->addChild('oai_dc:oai_dc:dc');
                 $oai_dc->addAttribute('xmlns:xmlns:dc', 'http://purl.org/dc/elements/1.1/');

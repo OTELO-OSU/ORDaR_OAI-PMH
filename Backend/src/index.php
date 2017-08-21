@@ -14,7 +14,7 @@ $app->get('/oai', function($request, $response, $args)
     $allGetVars = $request->getQueryParams();
     $request    = new RequestApi();
     
-    
+    $allGetVars['identifier']=str_replace('info:doi:', '', $allGetVars['identifier']);
     if ($allGetVars['verb'] == 'Identify') {
         $legitarg = array(
             'verb'
