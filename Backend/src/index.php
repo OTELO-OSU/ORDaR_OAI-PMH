@@ -14,7 +14,6 @@ $app->get('/oai', function($request, $response, $args)
     $allGetVars = $request->getQueryParams();
     $request    = new RequestApi();
     
-    $allGetVars['identifier']=str_replace('info:doi:', '', $allGetVars['identifier']);
     if ($allGetVars['verb'] == 'Identify') {
         $legitarg = array(
             'verb'
@@ -73,6 +72,7 @@ $app->get('/oai', function($request, $response, $args)
             $xml = $request->ListRecords($allGetVars['metadataPrefix'], $allGetVars['from'], $allGetVars['until'], $allGetVars['set'], $allGetVars['resumptionToken']);
         }
     } elseif ($allGetVars['verb'] == 'GetRecord') {
+    	$allGetVars['identifier']=str_replace('info:doi:', '', $allGetVars['identifier']);
         $legitarg = array(
             'verb',
             'metadataPrefix',
