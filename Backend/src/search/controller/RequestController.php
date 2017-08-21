@@ -295,11 +295,6 @@ class RequestController
         $request = $sxe->addChild('request', $config['BaseUrl'] . $uri[0]);
         $request->addAttribute('verb', 'ListRecords');
         $request->addAttribute('metadataPrefix', $metadataPrefix);
-        $dbdoi  = new \MongoClient("mongodb://" . $config['host'] . ':' . $config['port'], array(
-            'authSource' => $config['authSource'],
-            'username' => $config['username'],
-            'password' => $config['password']
-        ));
         $Token  = "";
         $cursor = 0;
         if (!empty($encodedresumptionToken)) {
