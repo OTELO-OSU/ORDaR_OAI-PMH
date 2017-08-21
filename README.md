@@ -36,18 +36,18 @@ OAI-PHM implementation
 
 **Fichier de configuration de l'application**
 
-REPOSITORY_NAME=TEST        #Nom du repository
-BaseUrl=http://test.fr      #URL du repository
-ProtocolVersion=2.0         #Version du protocole OAI-PMH
-adminEmail=admin@admin.fr   #Email de l'administrateur
-deletedRecord="no"          
-granularity=YYYY-MM-DD      #granularité
-TokenGenerationKey="test"   #Clé a utiliser pour chiffrer les resumptionTokens
+    REPOSITORY_NAME=TEST        #Nom du repository
+    BaseUrl=http://test.fr      #URL du repository
+    ProtocolVersion=2.0         #Version du protocole OAI-PMH
+    adminEmail=admin@admin.fr   #Email de l'administrateur
+    deletedRecord="no"          
+    granularity=YYYY-MM-DD      #granularité
+    TokenGenerationKey="test"   #Clé a utiliser pour chiffrer les resumptionTokens
 
-#ELASTICSEARCH config
-APIHost=localhost           #Adresse de l'api elasticsearch
-APIPort=9200                #Port de l'api elasticsearch
-authSource=ORDaR            #Nom de la Base 
+    #ELASTICSEARCH config
+    APIHost=localhost           #Adresse de l'api elasticsearch
+    APIPort=9200                #Port de l'api elasticsearch
+    authSource=ORDaR            #Nom de la Base 
 
 
 **Liste des verbs:**
