@@ -26,9 +26,9 @@ Clone du projet:
       sudo a2enmod rewrite
 
      Exemple:
-     DocumentRoot /var/www/html/ORDaR/Frontend/src/
+     DocumentRoot /var/www/html/ORDaR_OAI-PMH/Backend/src
 
-    <Directory /var/www/html/ORDaR_OAI-PMH/ORDaR_OAI-PMH/Backend/src>
+    <Directory /var/www/html/ORDaR_OAI-PMH/Backend/src>
         AllowOverride All
         Order allow,deny
         allow from all
