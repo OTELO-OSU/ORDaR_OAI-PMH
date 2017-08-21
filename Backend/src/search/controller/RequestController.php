@@ -23,7 +23,7 @@ class RequestController
         $identify->addChild('protocolVersion', $config['ProtocolVersion']);
         $identify->addChild('adminEmail', $config['adminEmail']);
         $values = self::requestToAPI(0, "0000-01-01", "9999-12-31", "0", 'asc', 1, null);
-        $identify->addChild('earliestDatestamp', $values['hits']['hits'][0]['CREATION_DATE']);
+        $identify->addChild('earliestDatestamp', $values['hits']['hits'][0]['PUBLICATION_DATE']);
         $identify->addChild('deletedRecord', $config['deletedRecord']);
         $identify->addChild('granularity', $config['granularity']);
         $xml = $sxe->asXML();
@@ -74,9 +74,9 @@ class RequestController
                 $recordxml     = $getrecord->addChild('record');
                 $header     = $recordxml->addChild('header');
                 $identifier = $header->addChild('identifier', $identifier);
-                $datestamp  = $header->addChild('datestamp', $record['_source']['INTRO']['CREATION_DATE']);
+                $datestamp  = $header->addChild('datestamp', $record['_source']['INTRO']['PUBLICATION_DATE']);
                foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $value) {
-                    $Setspec    = $header->addChild('setSpec', $value['NAME']);
+                    $Setspec    = $header->addChild('setSpec',  str_replace(' ', '_', $value['NAME']));
                }                
                $metadata   = $recordxml->addChild('metadata');
                 $oai_dc     = $metadata->addChild('oai_dc:oai_dc:dc');
@@ -89,7 +89,7 @@ class RequestController
                 foreach ($record['_source']['INTRO']['FILE_CREATOR'] as $key => $author) {
                     $oai_dc->addChild('dc:dc:creator', $author['DISPLAY_NAME']);
                 }
-                $dc_date        = $oai_dc->addChild('dc:dc:date', $record['_source']['INTRO']['CREATION_DATE']);
+                $dc_date        = $oai_dc->addChild('dc:dc:date', $record['_source']['INTRO']['PUBLICATION_DATE']);
                 $dc_description = $oai_dc->addChild('dc:dc:description', $record['_source']['INTRO']['DATA_DESCRIPTION']);
                 $dc_language    = $oai_dc->addChild('dc:dc:language', $record['_source']['INTRO']['LANGUAGE']);
                 $dc_publisher   = $oai_dc->addChild('dc:dc:dc_publisher', $record['_source']['INTRO']['PUBLISHER']);
@@ -138,11 +138,11 @@ class RequestController
             $set = "";
         }
         $postcontent                = '{  
-            "sort": { "INTRO.CREATION_DATE": { "order": "' . $order . '" }} 
+            "sort": { "INTRO.PUBLICATION_DATE": { "order": "' . $order . '" }} 
             }
 
        ';
-        $url                        = 'http://'.$config['APIHost'].'/' . $bdd . '/_search?q=*AND%20INTRO.CREATION_DATE:[' . $from . '%20TO%20' . $until . ']%20AND%20NOT%20INTRO.ACCESS_RIGHT:Unpublished%20AND%20NOT%20INTRO.ACCESS_RIGHT:Draft' . $set . '&size=' . $size . '&from=' . $page;
+        $url                        = 'http://'.$config['APIHost'].'/' . $bdd . '/_search?q=*AND%20INTRO.PUBLICATION_DATE:[' . $from . '%20TO%20' . $until . ']%20AND%20NOT%20INTRO.ACCESS_RIGHT:Unpublished%20AND%20NOT%20INTRO.ACCESS_RIGHT:Draft' . $set . '&size=' . $size . '&from=' . $page;
         $curlopt                    = array(
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_PORT => $config['APIPort'],
@@ -171,7 +171,7 @@ class RequestController
         $config = self::ConfigFile();
         $bdd    = strtolower($config['authSource']);
         $postcontent                = '{  
-            "sort": { "INTRO.CREATION_DATE": { "order": "' . $order . '" }} 
+            "sort": { "INTRO.PUBLICATION_DATE": { "order": "' . $order . '" }} 
             }
 
        ';
@@ -311,9 +311,9 @@ class RequestController
         foreach ($values['hits']['hits'] as $key => $value) {
             $header     = $getrecord->addChild('header');
             $identifier = $header->addChild('identifier', $value['_id']);
-            $datestamp  = $header->addChild('datestamp', $value['CREATION_DATE']);
+            $datestamp  = $header->addChild('datestamp', $value['PUBLICATION_DATE']);
             foreach ($value['SCIENTIFIC_FIELD'] as $key => $value) {
-               $Setspec    = $header->addChild('setSpec', $value['NAME']);
+               $Setspec    = $header->addChild('setSpec', str_replace(' ', '_', $value['NAME']));
             }
             
         }
@@ -398,9 +398,9 @@ class RequestController
             $record     = $getrecord->addChild('record');
             $header     = $record->addChild('header');
             $identifier = $header->addChild('identifier', $value['_id']);
-            $datestamp  = $header->addChild('datestamp', $value['CREATION_DATE']);
+            $datestamp  = $header->addChild('datestamp', $value['PUBLICATION_DATE']);
             foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
-               $Setspec    = $header->addChild('setSpec', $SCIENTIFIC_FIELD['NAME']);
+               $Setspec    = $header->addChild('setSpec', str_replace(' ', '_', $SCIENTIFIC_FIELD['NAME']));
             }            $metadata   = $record->addChild('metadata');
             $oai_dc     = $metadata->addChild('oai_dc:oai_dc:dc');
             $oai_dc->addAttribute('xmlns:xmlns:dc', 'http://purl.org/dc/elements/1.1/');
@@ -412,12 +412,12 @@ class RequestController
             foreach ($value['FILE_CREATOR'] as $key => $author) {
                 $oai_dc->addChild('dc:dc:creator', $author['DISPLAY_NAME']);
             }
-            $dc_date        = $oai_dc->addChild('dc:dc:date', $value['CREATION_DATE']);
+            $dc_date        = $oai_dc->addChild('dc:dc:date', $value['PUBLICATION_DATE']);
             $dc_description = $oai_dc->addChild('dc:dc:description', $value['DATA_DESCRIPTION']);
             $dc_language    = $oai_dc->addChild('dc:dc:language', $value['LANGUAGE']);
             $dc_publisher   = $oai_dc->addChild('dc:dc:dc_publisher', $value['PUBLISHER']);
             foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
-                $oai_dc->addChild('dc:dc:subject', $SCIENTIFIC_FIELD['NAME']);
+                $oai_dc->addChild('dc:dc:subject',$SCIENTIFIC_FIELD['NAME']);
             }
             $dc_accessright = $oai_dc->addChild('dc:dc:dc_rights', $value['ACCESS_RIGHT']);          
         }
@@ -452,7 +452,7 @@ class RequestController
         $values = self::requestSetToAPI();
         foreach ($values as $key => $value) {
             $sets = $Listsets->addChild('set');
-            $sets->addChild('setSpec', $value['key']);
+            $sets->addChild('setSpec', str_replace(' ', '_', $value['key']));
             $sets->addChild('setName', $value['key']);
             
         }
