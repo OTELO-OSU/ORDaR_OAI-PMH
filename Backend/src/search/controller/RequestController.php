@@ -68,69 +68,46 @@ class RequestController
         $request->addAttribute('verb', 'GetRecord');
         $request->addAttribute('identifier', $identifier);
         $request->addAttribute('metadataPrefix', $metadataPrefix);
-        $dbdoi       = new \MongoClient("mongodb://" . $config['host'] . ':' . $config['port'], array(
-            'authSource' => $config['authSource'],
-            'username' => $config['username'],
-            'password' => $config['password']
-        ));
-        $found       = 0;
-        $db          = $dbdoi->selectDB($config['authSource']);
-        $collections = $db->getCollectionNames();
-        foreach ($collections as $collection) {
-            $collection = $db->selectCollection($collection);
-            $query      = array(
-                '_id' => $identifier,
-                '$or' => array(
-                    array(
-                        "INTRO.ACCESS_RIGHT" => "Closed"
-                    ),
-                    array(
-                        "INTRO.ACCESS_RIGHT" => "Open"
-                    ),
-                    array(
-                        "INTRO.ACCESS_RIGHT" => "Embargoed"
-                    )
-                )
-            );
-            ;
-            $cursor = $collection->find($query);
-            foreach ($cursor as $key => $value) {
-            }
-            if ($cursor->count() == 1) {
-                $found      = 1;
+        $record=self::GetDocumentfromAPI($identifier);
+        if ($record['_source']['INTRO']['ACCESS_RIGHT']=="Open" OR $record['_source']['INTRO']['ACCESS_RIGHT']=="Closed" OR $record['_source']['INTRO']['ACCESS_RIGHT']=="Embargoed" ) {
                 $getrecord  = $sxe->addChild('GetRecord');
-                $record     = $getrecord->addChild('record');
-                $header     = $record->addChild('header');
+                $recordxml     = $getrecord->addChild('record');
+                $header     = $recordxml->addChild('header');
                 $identifier = $header->addChild('identifier', $identifier);
-                $datestamp  = $header->addChild('datestamp', $value['INTRO']['CREATION_DATE']);
-                $Setspec    = $header->addChild('setSpec', "??");
-                $metadata   = $record->addChild('metadata');
+                $datestamp  = $header->addChild('datestamp', $record['_source']['INTRO']['CREATION_DATE']);
+               foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $value) {
+                    $Setspec    = $header->addChild('setSpec', $value['NAME']);
+               }                
+               $metadata   = $recordxml->addChild('metadata');
                 $oai_dc     = $metadata->addChild('oai_dc:oai_dc:dc');
                 $oai_dc->addAttribute('xmlns:xmlns:dc', 'http://purl.org/dc/elements/1.1/');
                 $oai_dc->addAttribute('xmlns:xmlns:oai_dc', 'http://www.openarchives.org/OAI/2.0/oai_dc/');
                 $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
                 $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd');
                 $dc_identifier = $oai_dc->addChild('dc:dc:identifier', $identifier);
-                $dc_title      = $oai_dc->addChild('dc:dc:title', $value['INTRO']['TITLE']);
-                foreach ($value['INTRO']['FILE_CREATOR'] as $key => $author) {
+                $dc_title      = $oai_dc->addChild('dc:dc:title', $record['_source']['INTRO']['TITLE']);
+                foreach ($record['_source']['INTRO']['FILE_CREATOR'] as $key => $author) {
                     $oai_dc->addChild('dc:dc:creator', $author['DISPLAY_NAME']);
                 }
-                $dc_date        = $oai_dc->addChild('dc:dc:date', $value['INTRO']['CREATION_DATE']);
-                $dc_description = $oai_dc->addChild('dc:dc:description', $value['INTRO']['DATA_DESCRIPTION']);
-                $dc_language    = $oai_dc->addChild('dc:dc:language', $value['INTRO']['LANGUAGE']);
-                $dc_publisher   = $oai_dc->addChild('dc:dc:dc_publisher', $value['INTRO']['PUBLISHER']);
-                foreach ($value['INTRO']['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
+                $dc_date        = $oai_dc->addChild('dc:dc:date', $record['_source']['INTRO']['CREATION_DATE']);
+                $dc_description = $oai_dc->addChild('dc:dc:description', $record['_source']['INTRO']['DATA_DESCRIPTION']);
+                $dc_language    = $oai_dc->addChild('dc:dc:language', $record['_source']['INTRO']['LANGUAGE']);
+                $dc_publisher   = $oai_dc->addChild('dc:dc:dc_publisher', $record['_source']['INTRO']['PUBLISHER']);
+                foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                     $oai_dc->addChild('dc:dc:subject', $SCIENTIFIC_FIELD['NAME']);
                 }
-                $dc_accessright = $oai_dc->addChild('dc:dc:dc_rights', $value['INTRO']['ACCESS_RIGHT']);
-                
-            }
-            
+                $dc_accessright = $oai_dc->addChild('dc:dc:dc_rights', $record['_source']['INTRO']['ACCESS_RIGHT']);
         }
-        if ($found == 0) {
+        else{
             $identify = $sxe->addChild('error', ' "' . $identifier . '" is unknown or illegal in this repository');
             $identify->addAttribute('code', 'iDoesNotExist');
+
         }
+
+            
+          
+        
+        
         
         
         
@@ -165,10 +142,10 @@ class RequestController
             }
 
        ';
-        $url                        = 'http://localhost/' . $bdd . '/_search?q=*AND%20INTRO.CREATION_DATE:[' . $from . '%20TO%20' . $until . ']%20AND%20NOT%20INTRO.ACCESS_RIGHT:Unpublished%20AND%20NOT%20INTRO.ACCESS_RIGHT:Draft' . $set . '&size=' . $size . '&from=' . $page;
+        $url                        = 'http://'.$config['APIHost'].'/' . $bdd . '/_search?q=*AND%20INTRO.CREATION_DATE:[' . $from . '%20TO%20' . $until . ']%20AND%20NOT%20INTRO.ACCESS_RIGHT:Unpublished%20AND%20NOT%20INTRO.ACCESS_RIGHT:Draft' . $set . '&size=' . $size . '&from=' . $page;
         $curlopt                    = array(
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_PORT => 9200,
+            CURLOPT_PORT => $config['APIPort'],
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
             CURLOPT_TIMEOUT => 40,
@@ -198,7 +175,7 @@ class RequestController
             }
 
        ';
-        $url                        = 'http://localhost/' . $bdd . '/_search?q=*';
+        $url                        = 'http://'.$config['APIHost'].'/' . $bdd . '/_search?q=*';
         $postcontent = '{  
             "sort": { "INTRO.METADATA_DATE": { "order": "desc" }} , 
             "_source": { 
@@ -214,7 +191,7 @@ class RequestController
         }';
         $curlopt                    = array(
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_PORT => 9200,
+            CURLOPT_PORT => $config['APIPort'],
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
             CURLOPT_TIMEOUT => 40,
@@ -227,6 +204,27 @@ class RequestController
         $response                   = $response['aggregations']['scientific_field']['buckets'];
        
         ;
+        return $response;
+    }
+
+      function GetDocumentfromAPI($id)
+    {
+        $config = self::ConfigFile();
+        $bdd    = strtolower($config['authSource']);
+        
+        $url      = 'http://'.$config['APIHost'].'/' . $bdd . '/_all/' . urlencode($id);
+
+        $curlopt                    = array(
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_PORT => $config['APIPort'],
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 40,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "GET"
+          );
+        $response                   = self::Curlrequest($url, $curlopt);
+        $response                   = json_decode($response, TRUE);
         return $response;
     }
     
