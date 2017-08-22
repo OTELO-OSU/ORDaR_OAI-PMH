@@ -47,6 +47,7 @@ Clone du projet:
     deletedRecord="no"          
     granularity=YYYY-MM-DD      #granularité
     TokenGenerationKey="test"   #Clé a utiliser pour chiffrer les resumptionTokens
+    SpecialSet="openaire,otherharvester"       #Set qui sera appliqué a tout les documents pour permettre d'etre recupérer par openaire ou autre. les valeurs doivent etre séparé par une virgule.
 
     #ELASTICSEARCH config
     APIHost=localhost           #Adresse de l'api elasticsearch
