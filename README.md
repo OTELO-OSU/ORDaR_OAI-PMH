@@ -82,6 +82,7 @@ Clone du projet:
               resumptionToken
   
   • ListRecords :Retourne une liste d'enregistrements correspondant aux différents paramètres (dates, ensemble) demandés.	Par pages de 10 documents, Utilisez le ResumptionToken pour les parcourir toutes. arguments: resumptionToken
+  Le token à une validtié de 5 minutes.
       
       Exemple:https://beta-ordar.otelo.univ-lorraine.fr/oai?verb=ListRecords&metadataPrefix=oai_dc&from=2000-01-01&until=2017-07-01
       
