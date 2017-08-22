@@ -105,7 +105,7 @@ class RequestController
                     $oai_dc->addChild('dc:dc:subject', $SCIENTIFIC_FIELD['NAME']);
                 }
                foreach ($record['_source']['DATA']['FILES'] as $key => $files) {
-                $oai_dc->addChild('dc:dc:type',$files['FILETYPE']);
+                $oai_dc->addChild('dc:dc:format',$files['FILETYPE']);
                 }
                 $dc_accessright = $oai_dc->addChild('dc:dc:rights', "info:eu-repo/semantics/".strtolower($record['_source']['INTRO']['ACCESS_RIGHT'])."Access");
                 $dc_license = $oai_dc->addChild('dc:dc:rights',$record['_source']['INTRO']['LICENSE'] );
@@ -440,7 +440,7 @@ class RequestController
                 $oai_dc->addChild('dc:dc:subject',$SCIENTIFIC_FIELD['NAME']);
             }
             foreach ($value['DATA']['FILES'] as $key => $files) {
-                $oai_dc->addChild('dc:dc:type',$files['FILETYPE']);
+                $oai_dc->addChild('dc:dc:format',$files['FILETYPE']);
             }
             if (!empty($config['SpecialSet'])) {
                     $sets=explode(",", $config['SpecialSet']);
