@@ -5,7 +5,7 @@ OAI-PHM implementation
 
 **Installation** 
 
-  Cette application OAI-PMH requiert l'installation de l'entrepot de données
+  Cette application OAI-PMH requiert l'installation de l'entrepot de données ORDaR
   https://github.com/OTELO-OSU/ORDaR
 
   Elle utilise ElasticSearch.
@@ -47,6 +47,7 @@ Clone du projet:
     deletedRecord="no"          
     granularity=YYYY-MM-DD      #granularité
     TokenGenerationKey="test"   #Clé a utiliser pour chiffrer les resumptionTokens
+    SpecialSet="openaire,otherharvester"       #Set qui sera appliqué a tout les documents pour permettre d'etre recupérer par openaire ou autre. les valeurs doivent etre séparé par une virgule.
 
     #ELASTICSEARCH config
     APIHost=localhost           #Adresse de l'api elasticsearch
