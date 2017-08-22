@@ -104,7 +104,11 @@ class RequestController
                 foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                     $oai_dc->addChild('dc:dc:subject', $SCIENTIFIC_FIELD['NAME']);
                 }
+               foreach ($record['_source']['DATA']['FILES'] as $key => $files) {
+                $oai_dc->addChild('dc:dc:type',$files['FILETYPE']);
+                }
                 $dc_accessright = $oai_dc->addChild('dc:dc:rights', "info:eu-repo/semantics/".strtolower($record['_source']['INTRO']['ACCESS_RIGHT'])."Access");
+                $dc_license = $oai_dc->addChild('dc:dc:rights',$record['_source']['INTRO']['LICENSE'] );
         }
         else{
             $identify = $sxe->addChild('error', ' "' . $identifier . '" is unknown or illegal in this repository');
@@ -435,17 +439,22 @@ class RequestController
             foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                 $oai_dc->addChild('dc:dc:subject',$SCIENTIFIC_FIELD['NAME']);
             }
+            foreach ($value['DATA']['FILES'] as $key => $files) {
+                $oai_dc->addChild('dc:dc:type',$files['FILETYPE']);
+            }
             if (!empty($config['SpecialSet'])) {
                     $sets=explode(",", $config['SpecialSet']);
-                    foreach ($sets as $key => $value) {
-                           $header->addChild('setSpec', $value);
+                    foreach ($sets as $key => $set) {
+                           $header->addChild('setSpec', $set);
                        }
                   }
 
 
           $oai_dc->addChild('dc:dc:type',"info:eu-repo/semantics/other");
             
-            $dc_accessright = $oai_dc->addChild('dc:dc:rights',"info:eu-repo/semantics/".strtolower($value['ACCESS_RIGHT'])."Access");          
+            $dc_accessright = $oai_dc->addChild('dc:dc:rights',"info:eu-repo/semantics/".strtolower($value['ACCESS_RIGHT'])."Access");   
+            $dc_license = $oai_dc->addChild('dc:dc:rights',$value['LICENSE'] );
+       
         }
         if ($values['hits']['total'] > $cursor) {
             $resumptionToken = $sxe->addChild('resumptionToken', urlencode(openssl_encrypt($Token, "AES-128-CBC", $config['TokenGenerationKey'])));
