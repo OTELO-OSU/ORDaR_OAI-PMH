@@ -78,7 +78,12 @@ class RequestController
                foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $value) {
                     $Setspec    = $header->addChild('setSpec',  str_replace(' ', '_', $value['NAME']));
                }                
-                            $header->addChild('setSpec', 'openaire');
+               if (!empty($config['SpecialSet'])) {
+                    $sets=explode(",", $config['SpecialSet']);
+                    foreach ($sets as $key => $value) {
+                           $header->addChild('setSpec', $value);
+                       }
+                  }
 
                $metadata   = $recordxml->addChild('metadata');
                 $oai_dc     = $metadata->addChild('oai_dc:oai_dc:dc');
@@ -319,6 +324,13 @@ class RequestController
             foreach ($value['SCIENTIFIC_FIELD'] as $key => $value) {
                $Setspec    = $header->addChild('setSpec', str_replace(' ', '_', $value['NAME']));
             }
+            if (!empty($config['SpecialSet'])) {
+                    $sets=explode(",", $config['SpecialSet']);
+                    foreach ($sets as $key => $value) {
+                           $header->addChild('setSpec', $value);
+                       }
+                  }
+
             
         }
         
@@ -423,6 +435,13 @@ class RequestController
             foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                 $oai_dc->addChild('dc:dc:subject',$SCIENTIFIC_FIELD['NAME']);
             }
+            if (!empty($config['SpecialSet'])) {
+                    $sets=explode(",", $config['SpecialSet']);
+                    foreach ($sets as $key => $value) {
+                           $header->addChild('setSpec', $value);
+                       }
+                  }
+
 
           $oai_dc->addChild('dc:dc:type',"info:eu-repo/semantics/other");
             
@@ -463,9 +482,15 @@ class RequestController
             $sets->addChild('setName', $value['key']);
             
         }
-          $sets = $Listsets->addChild('set');
-            $sets->addChild('setSpec', "openaire");
-            $sets->addChild('setName', "openaire");
+        if (!empty($config['SpecialSet'])) {
+          $sets=explode(",", $config['SpecialSet']);
+             foreach ($sets as $key => $value) {
+                  $sets = $Listsets->addChild('set');
+            $sets->addChild('setSpec', $value);
+            $sets->addChild('setName', $value);
+             }
+        }
+          
         $xml = $sxe->asXML();
         return $xml;
         
