@@ -5,7 +5,7 @@ OAI-PHM implementation
 
 **Installation** 
 
-  Cette application OAI-PMH requiert l'installation de l'entrepot de données
+  Cette application OAI-PMH requiert l'installation de l'entrepot de données ORDaR
   https://github.com/OTELO-OSU/ORDaR
 
   Elle utilise ElasticSearch.
