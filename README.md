@@ -58,11 +58,22 @@ Clone du projet:
 **Liste des verbs:**
 
   • Identify : Informations sur l'entrepôt de données.	
+      
+        Exemple: https://beta-ordar.otelo.univ-lorraine.fr/oai?verb=Identify
   
   • ListMetadataFormats :Demande la liste des formats de métadonnées disponibles.
   
+      Exemple: https://beta-ordar.otelo.univ-lorraine.fr/oai?verb=ListMetadataFormats
+  
   • ListSets : Demande la liste des ensembles disponibles sur un entrepôt.	
-       
+  
+      Exemple:https://beta-ordar.otelo.univ-lorraine.fr/oai?verb=ListSets
+
+  
+  • ListIdentifiers :Récupère la liste des identifiants disponibles.
+      
+      Exemple: https://beta-ordar.otelo.univ-lorraine.fr/oai?verb=ListIdentifiers&metadataPrefix=oai_dc&from=2017-07-01&until=2017-12-12
+         
        arguments: 
               from : date de début
               until : date de fin
@@ -70,17 +81,19 @@ Clone du projet:
               set
               resumptionToken
   
-  • ListIdentifiers :Récupère la liste des identifiants disponibles.
-  
   • ListRecords :Retourne une liste d'enregistrements correspondant aux différents paramètres (dates, ensemble) demandés.	Par pages de 10 documents, Utilisez le ResumptionToken pour les parcourir toutes. arguments: resumptionToken
-        
-     arguments: 
+      
+      Exemple:https://beta-ordar.otelo.univ-lorraine.fr/oai?verb=ListRecords&metadataPrefix=oai_dc&from=2000-01-01&until=2017-07-01
+      
+      arguments: 
          from : date de début
          until : date de fin
          metadataPrefix
          set
          resumptionToken
   • GetRecord :Récupération d'un enregistrement donné.	
+    
+      Exemple: https://beta-ordar.otelo.univ-lorraine.fr/oai?verb=GetRecord&identifier=10.5072/BETA-ORDAR-64&metadataPrefix=oai_dc
       
       arguments:
       identifier (id du document obligatoire)
