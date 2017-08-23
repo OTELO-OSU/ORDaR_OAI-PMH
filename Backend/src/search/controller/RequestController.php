@@ -259,7 +259,7 @@ class RequestController
         $Token  = "";
         $cursor = 0;
         if (!empty($encodedresumptionToken)) {
-            $resumptionToken = openssl_decrypt($encodedresumptionToken, "AES-128-CBC", $config['TokenGenerationKey']);
+            $resumptionToken = openssl_decrypt($encodedresumptionToken, "AES-128-ECB", $config['TokenGenerationKey']);
             $array           = explode("AND", $resumptionToken);
             $result          = array();
             foreach ($array as $key => $value) {
@@ -267,10 +267,10 @@ class RequestController
                 $result[$values[0]] = $values[1];
             }
             $metadataPrefix = $result['metadataPrefix'];
-            $from           = $result['from'];
-            $until          = $result['until'];
-            $cursor         = $result['cursor'];
-            $set            = $result['set'];
+            $from           = @$result['from'];
+            $until          = @$result['until'];
+            $cursor         = @$result['cursor'];
+            $set            = @$result['set'];
             $date           = new \DateTime();
             $currentime     = $date->getTimestamp();
             if (empty($cursor) || empty($metadataPrefix) OR ($currentime > $result['time'])) {
@@ -314,7 +314,7 @@ class RequestController
         $getrecord       = $sxe->addChild('ListIdentifiers');
                 if ($values['hits']['total'] > $cursor) {
 
-        $resumptionToken = $sxe->addChild('resumptionToken', urlencode(openssl_encrypt($Token, "AES-128-CBC", $config['TokenGenerationKey'])));
+        $resumptionToken = $sxe->addChild('resumptionToken', urlencode(openssl_encrypt($Token, "AES-128-ECB", $config['TokenGenerationKey'])));
         $resumptionToken->addAttribute('completeListSize', $values['hits']['total']);
    }
         if ($values['hits']['total'] == 0) {
@@ -359,7 +359,7 @@ class RequestController
         $Token  = "";
         $cursor = 0;
         if (!empty($encodedresumptionToken)) {
-            $resumptionToken = openssl_decrypt($encodedresumptionToken, "AES-128-CBC", $config['TokenGenerationKey']);
+            $resumptionToken = openssl_decrypt($encodedresumptionToken, "AES-128-ECB", $config['TokenGenerationKey']);
             $array           = explode("AND", $resumptionToken);
             $result          = array();
             foreach ($array as $key => $value) {
@@ -367,10 +367,10 @@ class RequestController
                 $result[$values[0]] = $values[1];
             }
             $metadataPrefix = $result['metadataPrefix'];
-            $from           = $result['from'];
-            $until          = $result['until'];
-            $cursor         = $result['cursor'];
-            $set            = $result['set'];
+            $from           = @$result['from'];
+            $until          = @$result['until'];
+            $cursor         = @$result['cursor'];
+            $set            = @$result['set'];
             $date           = new \DateTime();
             $currentime     = $date->getTimestamp();
             if (empty($cursor) || empty($metadataPrefix) OR ($currentime > $result['time'])) {
@@ -457,7 +457,7 @@ class RequestController
        
         }
         if ($values['hits']['total'] > $cursor) {
-            $resumptionToken = $sxe->addChild('resumptionToken', urlencode(openssl_encrypt($Token, "AES-128-CBC", $config['TokenGenerationKey'])));
+            $resumptionToken = $sxe->addChild('resumptionToken', urlencode(openssl_encrypt($Token, "AES-128-ECB", $config['TokenGenerationKey'])));
             $resumptionToken->addAttribute('completeListSize', $values['hits']['total']);
         }
         if ($values['hits']['total'] == 0) {

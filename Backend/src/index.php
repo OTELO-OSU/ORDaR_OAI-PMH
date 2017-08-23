@@ -43,14 +43,14 @@ $app->get('/oai', function($request, $response, $args)
         );
         if (empty($allGetVars['metadataPrefix'])) {
             if (empty($allGetVars['resumptionToken'])) {
-                $xml = $request->BadArgument();
+                $xml = $request->BadArgument($allGetVars['verb']);
                 
             } else {
                 $xml = $request->ListIdentifiers(null, null, null, null, $allGetVars['resumptionToken']);
             }
             
         } else {
-            $xml = $request->ListIdentifiers($allGetVars['metadataPrefix'], $allGetVars['from'], $allGetVars['until'], $allGetVars['set'], $allGetVars['resumptionToken']);
+            $xml = $request->ListIdentifiers($allGetVars['metadataPrefix'], @$allGetVars['from'], @$allGetVars['until'], @$allGetVars['set'], @$allGetVars['resumptionToken']);
         }
     } elseif ($allGetVars['verb'] == 'ListRecords') {
         $legitarg = array(
@@ -69,7 +69,7 @@ $app->get('/oai', function($request, $response, $args)
                 $xml = $request->ListRecords(null, null, null, null, $allGetVars['resumptionToken']);
             }
         } else {
-            $xml = $request->ListRecords($allGetVars['metadataPrefix'], $allGetVars['from'], $allGetVars['until'], $allGetVars['set'], $allGetVars['resumptionToken']);
+            $xml = $request->ListRecords($allGetVars['metadataPrefix'], @$allGetVars['from'], @$allGetVars['until'], @$allGetVars['set'], @$allGetVars['resumptionToken']);
         }
     } elseif ($allGetVars['verb'] == 'GetRecord') {
     	$allGetVars['identifier']=str_replace('info:doi:', '', $allGetVars['identifier']);
@@ -102,7 +102,7 @@ $app->get('/oai', function($request, $response, $args)
             $badarg = 1;
         }
     }
-    if ($allGetVars['metadataPrefix']) {
+    if (isset($allGetVars['metadataPrefix'])) {
         $supportedformat = array(
             'oai_dc'
         );
