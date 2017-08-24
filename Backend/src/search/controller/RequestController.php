@@ -1,6 +1,7 @@
 <?php
 namespace search\controller;
 ini_set('memory_limit', '-1');
+date_default_timezone_set('Europe/Paris');
 
 
 class RequestController
