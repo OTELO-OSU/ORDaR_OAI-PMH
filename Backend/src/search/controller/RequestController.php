@@ -44,10 +44,15 @@ class RequestController
         $request = $sxe->addChild('request', $config['BaseUrl'] . $uri[0]);
         $request->addAttribute('verb', 'ListMetadataFormats');
         $ListMetadataFormat1 = $sxe->addChild('ListMetadataFormats');
-        $ListMetadataFormat  = $ListMetadataFormat1->addChild('metadataFormat');
-        $ListMetadataFormat->addChild('metadataPrefix', "oai_dc");
-        $ListMetadataFormat->addChild('schema', "http://www.openarchives.org/OAI/2.0/oai_dc.xsd");
-        $ListMetadataFormat->addChild('metadataNamespace', "http://www.openarchives.org/OAI/2.0/oai_dc
+        $ListMetadataFormat_oaidc  = $ListMetadataFormat1->addChild('metadataFormat');
+        $ListMetadataFormat_oaidc->addChild('metadataPrefix', "oai_dc");
+        $ListMetadataFormat_oaidc->addChild('schema', "http://www.openarchives.org/OAI/2.0/oai_dc.xsd");
+        $ListMetadataFormat_oaidc->addChild('metadataNamespace', "http://www.openarchives.org/OAI/2.0/oai_dc
+");
+        $ListMetadataFormat_oai_datacite  = $ListMetadataFormat1->addChild('metadataFormat');
+        $ListMetadataFormat_oai_datacite->addChild('metadataPrefix', "oai_datacite");
+        $ListMetadataFormat_oai_datacite->addChild('schema', "http://schema.datacite.org/oai/oai-1.0/ oai_datacite.xsd");
+        $ListMetadataFormat_oai_datacite->addChild('metadataNamespace', "http://schema.datacite.org/oai/oai-1.0/
 ");
         
         
@@ -85,7 +90,8 @@ class RequestController
                            $header->addChild('setSpec', $value);
                        }
                   }
-
+                  if ($metadataPrefix=='oai_dc') {
+                       
                $metadata   = $recordxml->addChild('metadata');
                 $oai_dc     = $metadata->addChild('oai_dc:oai_dc:dc');
                 $oai_dc->addAttribute('xmlns:xmlns:dc', 'http://purl.org/dc/elements/1.1/');
@@ -110,6 +116,33 @@ class RequestController
                 }
                 $dc_accessright = $oai_dc->addChild('dc:dc:rights', "info:eu-repo/semantics/".strtolower($record['_source']['INTRO']['ACCESS_RIGHT'])."Access");
                 $dc_license = $oai_dc->addChild('dc:dc:rights',$record['_source']['INTRO']['LICENSE'] );
+                  }
+                  elseif ($metadataPrefix=='oai_datacite'){
+                     $metadata   = $recordxml->addChild('metadata');
+                     $oai_dc     = $metadata->addChild('oai_datacite:oai_datacite');
+                     $oai_dc->addAttribute('xmlns:xmlns', 'http://schema.datacite.org/oai/oai-1.0/');
+                     $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+                     $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://schema.datacite.org/oai/oai-1.0/ oai_datacite.xsd');
+                     $dc_identifier = $oai_dc->addChild('identifier', $identifier);
+                     $dc_title      = $oai_dc->addChild('title', $record['_source']['INTRO']['TITLE']);
+                     foreach ($record['_source']['INTRO']['FILE_CREATOR'] as $key => $author) {
+                         $oai_dc->addChild('creator', $author['DISPLAY_NAME']);
+                     }
+                     $dc_date        = $oai_dc->addChild('date', $record['_source']['INTRO']['PUBLICATION_DATE']);
+                     $dc_description = $oai_dc->addChild('description', $record['_source']['INTRO']['DATA_DESCRIPTION']);
+                     $dc_language    = $oai_dc->addChild('language', $record['_source']['INTRO']['LANGUAGE']);
+                     $dc_publisher   = $oai_dc->addChild('publisher', $record['_source']['INTRO']['PUBLISHER']);
+                    $oai_dc->addChild('type',"info:eu-repo/semantics/other");
+                     foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
+                         $oai_dc->addChild('subject', $SCIENTIFIC_FIELD['NAME']);
+                     }
+                    foreach ($record['_source']['DATA']['FILES'] as $key => $files) {
+                     $oai_dc->addChild('format',$files['FILETYPE']);
+                     }
+                     $dc_accessright = $oai_dc->addChild('rights', "info:eu-repo/semantics/".strtolower($record['_source']['INTRO']['ACCESS_RIGHT'])."Access");
+                     $dc_license = $oai_dc->addChild('rights',$record['_source']['INTRO']['LICENSE'] );
+
+                  }
         }
         else{
             $identify = $sxe->addChild('error', ' "' . $identifier . '" is unknown or illegal in this repository');
@@ -422,7 +455,10 @@ class RequestController
             $datestamp  = $header->addChild('datestamp', $value['PUBLICATION_DATE']);
             foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                $Setspec    = $header->addChild('setSpec', str_replace(' ', '_', $SCIENTIFIC_FIELD['NAME']));
-            }            $metadata   = $record->addChild('metadata');
+            }      
+          if ($metadataPrefix=='oai_dc') {
+  
+            $metadata   = $record->addChild('metadata');
             $oai_dc     = $metadata->addChild('oai_dc:oai_dc:dc');
             $oai_dc->addAttribute('xmlns:xmlns:dc', 'http://purl.org/dc/elements/1.1/');
             $oai_dc->addAttribute('xmlns:xmlns:oai_dc', 'http://www.openarchives.org/OAI/2.0/oai_dc/');
@@ -442,8 +478,7 @@ class RequestController
             }
             foreach ($value['DATA']['FILES'] as $key => $files) {
                 $oai_dc->addChild('dc:dc:format',$files['FILETYPE']);
-            }
-            if (!empty($config['SpecialSet'])) {
+                 if (!empty($config['SpecialSet'])) {
                     $sets=explode(",", $config['SpecialSet']);
                     foreach ($sets as $key => $set) {
                            $header->addChild('setSpec', $set);
@@ -455,6 +490,46 @@ class RequestController
             
             $dc_accessright = $oai_dc->addChild('dc:dc:rights',"info:eu-repo/semantics/".strtolower($value['ACCESS_RIGHT'])."Access");   
             $dc_license = $oai_dc->addChild('dc:dc:rights',$value['LICENSE'] );
+            }
+          }
+          elseif ($metadataPrefix=='oai_datacite') {
+                 $metadata   = $record->addChild('metadata');
+                 $oai_dc     = $metadata->addChild('oai_datacite:oai_datacite');
+                 $oai_dc->addAttribute('xmlns:xmlns', 'http://schema.datacite.org/oai/oai-1.0/');
+                 $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+                 $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://schema.datacite.org/oai/oai-1.0/ oai_datacite.xsd');
+                 $dc_identifier = $oai_dc->addChild('identifier', $identifier);
+                 $dc_title      = $oai_dc->addChild('title', $value['TITLE']);
+                 foreach ($value['FILE_CREATOR'] as $key => $author) {
+                     $oai_dc->addChild('creator', $author['DISPLAY_NAME']);
+                 }
+                 $dc_date        = $oai_dc->addChild('date', $value['PUBLICATION_DATE']);
+                 $dc_description = $oai_dc->addChild('description', $value['DATA_DESCRIPTION']);
+                 $dc_language    = $oai_dc->addChild('language', $value['LANGUAGE']);
+                 $dc_publisher   = $oai_dc->addChild('publisher', $value['PUBLISHER']);
+                 foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
+                     $oai_dc->addChild('subject',$SCIENTIFIC_FIELD['NAME']);
+                 }
+                 foreach ($value['DATA']['FILES'] as $key => $files) {
+                     $oai_dc->addChild('format',$files['FILETYPE']);
+                 }
+               $oai_dc->addChild('type',"info:eu-repo/semantics/other");
+                if (!empty($config['SpecialSet'])) {
+                    $sets=explode(",", $config['SpecialSet']);
+                    foreach ($sets as $key => $set) {
+                           $header->addChild('setSpec', $set);
+                       }
+                  }
+
+
+          $oai_dc->addChild('type',"info:eu-repo/semantics/other");
+            
+            $dc_accessright = $oai_dc->addChild('rights',"info:eu-repo/semantics/".strtolower($value['ACCESS_RIGHT'])."Access");   
+            $dc_license = $oai_dc->addChild('rights',$value['LICENSE'] );
+
+
+          }
+           
        
         }
         if ($values['hits']['total'] > $cursor) {

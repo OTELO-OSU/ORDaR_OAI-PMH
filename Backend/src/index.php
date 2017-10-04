@@ -104,7 +104,7 @@ $app->get('/oai', function($request, $response, $args)
     }
     if (isset($allGetVars['metadataPrefix'])) {
         $supportedformat = array(
-            'oai_dc'
+            'oai_dc','oai_datacite'
         );
         
         if (!in_array($allGetVars['metadataPrefix'], $supportedformat)) {
