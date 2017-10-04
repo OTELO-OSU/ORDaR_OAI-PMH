@@ -127,8 +127,10 @@ class RequestController
                      $dc_identifier->addAttribute('identifierType','DOI');
                     $dc_titles      = $oai_dc->addChild('titles');
                      $dc_title      = $dc_titles->addChild('title', $record['_source']['INTRO']['TITLE']);
+                     $dc_creators      = $oai_dc->addChild('creators');
                      foreach ($record['_source']['INTRO']['FILE_CREATOR'] as $key => $author) {
-                         $oai_dc->addChild('creatorName', $author['DISPLAY_NAME']);
+                         $dc_creator      = $dc_creators->addChild('creator');
+                         $dc_creator->addChild('creatorName', $author['DISPLAY_NAME']);
                      }
                      $year=explode('-', $record['_source']['INTRO']['PUBLICATION_DATE']);
                      $PUBLICATION_YEAR       = $oai_dc->addChild('publicationYear', $year[0]);
@@ -508,8 +510,10 @@ class RequestController
                  $dc_identifier->addAttribute('identifierType','DOI');                 
                  $dc_titles      = $oai_dc->addChild('titles');
                  $dc_title      = $dc_titles->addChild('title', $value['TITLE']);
+                 $dc_creators      = $oai_dc->addChild('creators');
                  foreach ($value['FILE_CREATOR'] as $key => $author) {
-                     $oai_dc->addChild('creatorName', $author['DISPLAY_NAME']);
+                     $dc_creator     = $dc_creators->addChild('creator');
+                     $dc_creator->addChild('creatorName', $author['DISPLAY_NAME']);
                  }
                $year=explode('-', $value['PUBLICATION_DATE']);
                $PUBLICATION_YEAR       = $oai_dc->addChild('publicationYear', $year[0]);  
