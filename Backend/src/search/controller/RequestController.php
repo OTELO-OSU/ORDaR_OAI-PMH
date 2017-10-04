@@ -124,7 +124,7 @@ class RequestController
                      $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
                      $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://schema.datacite.org/oai/oai-1.0/ oai_datacite.xsd');
                      $dc_identifier = $oai_dc->addChild('identifier', $identifier);
-                     $dc_identifier->addAttribute('relatedIdentifierType','DOI');
+                     $dc_identifier->addAttribute('identifierType','DOI');
                     $dc_titles      = $oai_dc->addChild('titles');
                      $dc_title      = $dc_titles->addChild('title', $record['_source']['INTRO']['TITLE']);
                      foreach ($record['_source']['INTRO']['FILE_CREATOR'] as $key => $author) {
@@ -504,7 +504,7 @@ class RequestController
                  $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
                  $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://schema.datacite.org/oai/oai-1.0/ oai_datacite.xsd');
                  $dc_identifier = $oai_dc->addChild('identifier', $value['_id']);
-                 $dc_identifier->addAttribute('relatedIdentifierType','DOI');                 
+                 $dc_identifier->addAttribute('identifierType','DOI');                 
                  $dc_titles      = $oai_dc->addChild('titles');
                  $dc_title      = $dc_titles->addChild('title', $value['TITLE']);
                  foreach ($value['FILE_CREATOR'] as $key => $author) {
