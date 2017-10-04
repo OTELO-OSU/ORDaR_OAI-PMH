@@ -122,7 +122,7 @@ class RequestController
                      $oai_dc     = $metadata->addChild('oai_datacite:oai_datacite');
                      $oai_dc->addAttribute('xmlns:xmlns', 'http://schema.datacite.org/oai/oai-1.0/');
                      $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-                     $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://schema.datacite.org/oai/oai-1.0/ oai_datacite.xsd');
+                     $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://schema.datacite.org/oai/oai-1.0/oai_datacite.xsd');
                      $dc_identifier = $oai_dc->addChild('identifier', $identifier);
                      $dc_identifier->addAttribute('identifierType','DOI');
                     $dc_titles      = $oai_dc->addChild('titles');
@@ -132,7 +132,8 @@ class RequestController
                      }
                      $year=explode('-', $record['_source']['INTRO']['PUBLICATION_DATE']);
                      $PUBLICATION_YEAR       = $oai_dc->addChild('publicationYear', $year[0]);
-                     $dc_date        = $oai_dc->addChild('date', $record['_source']['INTRO']['PUBLICATION_DATE']);
+                     $dc_dates      = $oai_dc->addChild('dates');
+                     $dc_date        = $dc_dates->addChild('date', $record['_source']['INTRO']['PUBLICATION_DATE']);
                      $dc_date->addAttribute('dateType','Valid');
                      $dc_description = $oai_dc->addChild('description', $record['_source']['INTRO']['DATA_DESCRIPTION']);
                      $dc_language    = $oai_dc->addChild('language', $record['_source']['INTRO']['LANGUAGE']);
@@ -502,7 +503,7 @@ class RequestController
                  $oai_dc     = $metadata->addChild('oai_datacite:oai_datacite');
                  $oai_dc->addAttribute('xmlns:xmlns', 'http://schema.datacite.org/oai/oai-1.0/');
                  $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-                 $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://schema.datacite.org/oai/oai-1.0/ oai_datacite.xsd');
+                 $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://schema.datacite.org/oai/oai-1.0/oai_datacite.xsd');
                  $dc_identifier = $oai_dc->addChild('identifier', $value['_id']);
                  $dc_identifier->addAttribute('identifierType','DOI');                 
                  $dc_titles      = $oai_dc->addChild('titles');
@@ -511,7 +512,9 @@ class RequestController
                      $oai_dc->addChild('creatorName', $author['DISPLAY_NAME']);
                  }
                $year=explode('-', $value['PUBLICATION_DATE']);
-               $PUBLICATION_YEAR       = $oai_dc->addChild('publicationYear', $year[0]);                 $dc_date        = $oai_dc->addChild('date', $value['PUBLICATION_DATE']);
+               $PUBLICATION_YEAR       = $oai_dc->addChild('publicationYear', $year[0]);  
+               $dc_dates      = $oai_dc->addChild('dates');
+                $dc_date        = $dc_dates->addChild('date', $value['PUBLICATION_DATE']);
                  $dc_date->addAttribute('dateType','Valid');
                  $dc_description = $oai_dc->addChild('description', $value['DATA_DESCRIPTION']);
                  $dc_language    = $oai_dc->addChild('language', $value['LANGUAGE']);
