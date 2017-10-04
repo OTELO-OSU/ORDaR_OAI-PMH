@@ -79,7 +79,7 @@ class RequestController
                 $getrecord  = $sxe->addChild('GetRecord');
                 $recordxml     = $getrecord->addChild('record');
                 $header     = $recordxml->addChild('header');
-                $identifier = $header->addChild('identifier', "info:doi:".$identifier);
+                $identifierdc = $header->addChild('identifier', "info:doi:".$identifier);
                 $datestamp  = $header->addChild('datestamp', $record['_source']['INTRO']['PUBLICATION_DATE']);
                foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $value) {
                     $Setspec    = $header->addChild('setSpec',  str_replace(' ', '_', $value['NAME']));
@@ -98,7 +98,7 @@ class RequestController
                 $oai_dc->addAttribute('xmlns:xmlns:oai_dc', 'http://www.openarchives.org/OAI/2.0/oai_dc/');
                 $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
                 $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd');
-                $dc_identifier = $oai_dc->addChild('dc:dc:identifier', $identifier);
+                $dc_identifier = $oai_dc->addChild('dc:dc:identifier', $identifierdc);
                 $dc_title      = $oai_dc->addChild('dc:dc:title', $record['_source']['INTRO']['TITLE']);
                 foreach ($record['_source']['INTRO']['FILE_CREATOR'] as $key => $author) {
                     $oai_dc->addChild('dc:dc:creator', $author['DISPLAY_NAME']);
@@ -123,7 +123,7 @@ class RequestController
                      $oai_dc->addAttribute('xmlns:xmlns', 'http://schema.datacite.org/oai/oai-1.0/');
                      $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
                      $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://schema.datacite.org/oai/oai-1.0/ oai_datacite.xsd');
-                     $dc_identifier = $oai_dc->addChild('relatedIdentifier', $identifier);
+                     $dc_identifier = $oai_dc->addChild('identifier', $identifier);
                      $dc_identifier->addAttribute('relatedIdentifierType','DOI');
                     $dc_titles      = $oai_dc->addChild('titles');
                      $dc_title      = $dc_titles->addChild('title', $record['_source']['INTRO']['TITLE']);
@@ -503,7 +503,7 @@ class RequestController
                  $oai_dc->addAttribute('xmlns:xmlns', 'http://schema.datacite.org/oai/oai-1.0/');
                  $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
                  $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://schema.datacite.org/oai/oai-1.0/ oai_datacite.xsd');
-                 $dc_identifier = $oai_dc->addChild('relatedIdentifier', $identifier);
+                 $dc_identifier = $oai_dc->addChild('identifier', $value['_id']);
                  $dc_identifier->addAttribute('relatedIdentifierType','DOI');                 
                  $dc_titles      = $oai_dc->addChild('titles');
                  $dc_title      = $dc_titles->addChild('title', $value['TITLE']);
