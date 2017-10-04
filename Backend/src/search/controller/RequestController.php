@@ -134,7 +134,7 @@ class RequestController
                      $PUBLICATION_YEAR       = $oai_dc->addChild('publicationYear', $year[0]);
                      $dc_dates      = $oai_dc->addChild('dates');
                      $dc_date        = $dc_dates->addChild('date', $record['_source']['INTRO']['PUBLICATION_DATE']);
-                     $dc_date->addAttribute('dateType','Valid');
+                     $dc_date->addAttribute('dateType','Issued');
                      $dc_description = $oai_dc->addChild('description', $record['_source']['INTRO']['DATA_DESCRIPTION']);
                      $dc_language    = $oai_dc->addChild('language', $record['_source']['INTRO']['LANGUAGE']);
                      $dc_publisher   = $oai_dc->addChild('publisher', $record['_source']['INTRO']['PUBLISHER']);
@@ -515,7 +515,7 @@ class RequestController
                $PUBLICATION_YEAR       = $oai_dc->addChild('publicationYear', $year[0]);  
                $dc_dates      = $oai_dc->addChild('dates');
                 $dc_date        = $dc_dates->addChild('date', $value['PUBLICATION_DATE']);
-                 $dc_date->addAttribute('dateType','Valid');
+                 $dc_date->addAttribute('dateType','Issued');
                  $dc_description = $oai_dc->addChild('description', $value['DATA_DESCRIPTION']);
                  $dc_language    = $oai_dc->addChild('language', $value['LANGUAGE']);
                  $dc_publisher   = $oai_dc->addChild('publisher', $value['PUBLISHER']);
