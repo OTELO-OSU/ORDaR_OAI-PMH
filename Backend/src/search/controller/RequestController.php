@@ -121,8 +121,7 @@ class RequestController
                      $metadata   = $recordxml->addChild('metadata');
                      $oai_dc     = $metadata->addChild('oai_datacite:oai_datacite');
                      $oai_dc->addAttribute('xmlns:xmlns', 'http://schema.datacite.org/oai/oai-1.0/');
-                     $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-                     $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://schema.datacite.org/oai/oai-1.0/oai_datacite.xsd');
+                     $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd');
                      $dc_identifier = $oai_dc->addChild('identifier', $identifier);
                      $dc_identifier->addAttribute('identifierType','DOI');
                     $dc_titles      = $oai_dc->addChild('titles');
@@ -504,8 +503,7 @@ class RequestController
                  $metadata   = $record->addChild('metadata');
                  $oai_dc     = $metadata->addChild('oai_datacite:oai_datacite');
                  $oai_dc->addAttribute('xmlns:xmlns', 'http://schema.datacite.org/oai/oai-1.0/');
-                 $oai_dc->addAttribute('xmlns:xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-                 $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://schema.datacite.org/oai/oai-1.0/oai_datacite.xsd');
+                 $oai_dc->addAttribute('xsi:xsi:schemaLocation', 'http://datacite.org/schema/kernel-3 http://schema.datacite.org/meta/kernel-3/metadata.xsd');
                  $dc_identifier = $oai_dc->addChild('identifier', $value['_id']);
                  $dc_identifier->addAttribute('identifierType','DOI');                 
                  $dc_titles      = $oai_dc->addChild('titles');
