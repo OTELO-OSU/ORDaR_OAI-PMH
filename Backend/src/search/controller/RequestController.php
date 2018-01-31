@@ -107,6 +107,7 @@ class RequestController
                 $dc_description = $oai_dc->addChild('dc:dc:description', $record['_source']['INTRO']['DATA_DESCRIPTION']);
                 $dc_language    = $oai_dc->addChild('dc:dc:language', $record['_source']['INTRO']['LANGUAGE']);
                 $dc_publisher   = $oai_dc->addChild('dc:dc:publisher', $record['_source']['INTRO']['PUBLISHER']);
+		$dc_ressourcetype   = $oai_dc->addChild('dc:dc:dc_ressourcetype', 'dataset');
                $oai_dc->addChild('dc:dc:type',"info:eu-repo/semantics/other");
                 foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                     $oai_dc->addChild('dc:dc:subject', $SCIENTIFIC_FIELD['NAME']);
@@ -140,6 +141,8 @@ class RequestController
                      $dc_description = $oai_dc->addChild('description', $record['_source']['INTRO']['DATA_DESCRIPTION']);
                      $dc_language    = $oai_dc->addChild('language', $record['_source']['INTRO']['LANGUAGE']);
                      $dc_publisher   = $oai_dc->addChild('publisher', $record['_source']['INTRO']['PUBLISHER']);
+		$dc_ressourcetype   = $oai_dc->addChild('resourceType', 'Dataset');
+            	$dc_ressourcetype->addAttribute('ressourceTypeGeneral','Dataset');
                     $oai_dc->addChild('type',"info:eu-repo/semantics/other");
                      foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                          $oai_dc->addChild('subject', $SCIENTIFIC_FIELD['NAME']);
