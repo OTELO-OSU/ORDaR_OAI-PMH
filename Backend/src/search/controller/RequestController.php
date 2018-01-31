@@ -481,6 +481,7 @@ class RequestController
             $dc_description = $oai_dc->addChild('dc:dc:description', $value['DATA_DESCRIPTION']);
             $dc_language    = $oai_dc->addChild('dc:dc:language', $value['LANGUAGE']);
             $dc_publisher   = $oai_dc->addChild('dc:dc:dc_publisher', $value['PUBLISHER']);
+            $dc_ressourcetype   = $oai_dc->addChild('dc:dc:dc_ressourcetype', 'dataset');
             foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                 $oai_dc->addChild('dc:dc:subject',$SCIENTIFIC_FIELD['NAME']);
             }
@@ -524,6 +525,8 @@ class RequestController
                  $dc_description = $oai_dc->addChild('description', $value['DATA_DESCRIPTION']);
                  $dc_language    = $oai_dc->addChild('language', $value['LANGUAGE']);
                  $dc_publisher   = $oai_dc->addChild('publisher', $value['PUBLISHER']);
+            $dc_ressourcetype   = $oai_dc->addChild('resourceType', 'Dataset');
+            $dc_ressourcetype->addAttribute('ressourceTypeGeneral','Dataset');
                  foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                      $oai_dc->addChild('subject',$SCIENTIFIC_FIELD['NAME']);
                  }
