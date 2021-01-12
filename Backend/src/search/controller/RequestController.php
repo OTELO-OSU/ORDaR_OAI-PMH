@@ -81,6 +81,12 @@ class RequestController
                 $header     = $recordxml->addChild('header');
                 $identifierdc = $header->addChild('identifier', "info:doi:".$identifier);
                 $datestamp  = $header->addChild('datestamp', $record['_source']['INTRO']['PUBLICATION_DATE']);
+
+		foreach ($record['_source']['INTRO']['SUPPLEMENTARY_FIELDS'] as $key => $SUPPL) {
+                  if ($key=='PROJECT'){
+			 $Setspec    = $header->addChild('setSpec',  str_replace(' ', '_', $SUPPL));
+					}
+               }		
                foreach ($record['_source']['INTRO']['SCIENTIFIC_FIELD'] as $key => $value) {
                     $Setspec    = $header->addChild('setSpec',  str_replace(' ', '_', $value['NAME']));
                }                
@@ -190,7 +196,7 @@ class RequestController
         $config = self::ConfigFile();
         $bdd    = strtolower($config['authSource']);
         if (!empty($set)) {
-            $set = "%20AND%20INTRO.SCIENTIFIC_FIELD.NAME:" . $set;
+            $set = "%20AND%20(INTRO.SCIENTIFIC_FIELD.NAME:" . $set . "%20OR%20INTRO.SUPPLEMENTARY_FIELDS.PROJECT:" . $set . ")";
         } else {
             $set = "";
         }
@@ -243,9 +249,11 @@ class RequestController
                 "scientific_field" : {   
                     "terms" : {   
                       "field" : "INTRO.SCIENTIFIC_FIELD.NAME"  
-                    }  
-                } 
-            }  
+                     }  
+                                     } 
+
+                              }  
+
         }';
         $curlopt                    = array(
             CURLOPT_RETURNTRANSFER => true,
@@ -349,8 +357,8 @@ class RequestController
             $xml = self::badArgumentDate("until");
             return $xml;
         }
-        $values = self::requestToAPI(0, $from, $until, $cursor, 'desc', 10, $set);
-        $cursor = $cursor + 10;
+        $values = self::requestToAPI(0, $from, $until, $cursor, 'desc', 100, $set);
+        $cursor = $cursor + 100;
         $Token .= 'ANDcursor!' . $cursor;
         $date = new \DateTime();
         $date->modify('+5 minutes');
@@ -370,6 +378,11 @@ class RequestController
             $header     = $getrecord->addChild('header');
             $identifier = $header->addChild('identifier', "info:doi:".$value['_id']);
             $datestamp  = $header->addChild('datestamp', $value['PUBLICATION_DATE']);
+	foreach ($value['SUPPLEMENTARY_FIELDS'] as $key => $SUPPL) {
+                        if ($key=='PROJECT'){
+                          $Setspec    = $header->addChild('setSpec',  str_replace(' ', '_', $SUPPL));
+                                              }
+                     }
             foreach ($value['SCIENTIFIC_FIELD'] as $key => $value) {
                $Setspec    = $header->addChild('setSpec', str_replace(' ', '_', $value['NAME']));
             }
@@ -451,8 +464,8 @@ class RequestController
         }
         
         
-        $values = self::requestToAPI(0, $from, $until, $cursor, 'desc', 10, $set);
-        $cursor = $cursor + 10;
+        $values = self::requestToAPI(0, $from, $until, $cursor, 'desc', 100, $set);
+        $cursor = $cursor + 100;
         $Token .= 'ANDcursor!' . $cursor;
         $date = new \DateTime();
         $date->modify('+5 minutes');
@@ -464,9 +477,15 @@ class RequestController
             $header     = $record->addChild('header');
             $identifier = $header->addChild('identifier', "info:doi:".$value['_id']);
             $datestamp  = $header->addChild('datestamp', $value['PUBLICATION_DATE']);
-            foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
+            #$Setspec    = $header->addChild('setSpec', str_replace(' ', '_', 'hello zam'));
+	foreach ($value['SUPPLEMENTARY_FIELDS'] as $key => $SUPPL) {
+                        if ($key=='PROJECT'){
+                               $Setspec    = $header->addChild('setSpec',  str_replace(' ', '_', $SUPPL));
+                                              }
+                     }
+	foreach ($value['SCIENTIFIC_FIELD'] as $key => $SCIENTIFIC_FIELD) {
                $Setspec    = $header->addChild('setSpec', str_replace(' ', '_', $SCIENTIFIC_FIELD['NAME']));
-            }      
+            }     
           if ($metadataPrefix=='oai_dc') {
   
             $metadata   = $record->addChild('metadata');
